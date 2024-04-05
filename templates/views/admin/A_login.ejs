@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Document</title>
+        <%- include('../../partials/link.ejs') %>
+    </head>
+    <style>
+        .login-form {
+            max-width: 400px;
+            margin: auto;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            background-color: #fff;
+            box-shadow: 0px 0px 10px 0px rgba(0,0,0,0.1);
+        }
+        .login-form h2 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .login-form .form-control {
+            border-radius: 20px;
+        }
+        .login-form .btn-primary {
+            width: 100%;
+            border-radius: 20px;
+        }
+        .login-form .mb-3 a {
+            display: block;
+        }
+    </style>
+<body>
+    <div class="container" style="margin-top: 140px;">
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <div class="login-form">
+                    <h2>Login</h2>
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email address</label>
+                        <input type="email" class="form-control" id="email" placeholder="Enter email">
+                        <div id="emailError" class="text-danger"></div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Password</label>
+                        <input type="password" class="form-control" id="password" placeholder="Password">
+                        <div id="passwordError" class="text-danger"></div>
+                    </div>
+                    <div class="mb-3 d-flex">
+                        <a class="text-primary" href="/adminRegister">Don't have an account?</a>
+                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                        <a class="text-primary" href="/forgetPass">Forgot password</a>
+                    </div>
+                    <button class="btn btn-primary" id="login" onclick="login()">Login</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+<script>
+
+    function login(){
+        var email = document.getElementById('email').value;
+        var password = document.getElementById('password').value;
+
+        if(email == ""  || password == ""){
+            return Swal.fire({
+                title: "Oops...",
+                text: "All fileds are required.",
+                icon: "error"
+            });
+        }
+        const apiData = new FormData();
+        apiData.append('email', email);
+        apiData.append('password', password);
+
+        fetch('/adminlogin', {
+            method: 'POST',
+            body: apiData,
+        })
+        .then(function (response) {
+            if (response.ok) {
+                return response.json();
+            }
+            throw new Error('Network response was not ok.');
+        })
+        .then(function (result) {
+            if (result.available) {
+                localStorage.setItem('token',result.token)
+                location.replace("/Aloader");
+            }else{
+                Swal.fire({
+                    title: "Oops...",
+                    text: "Login failed. Invalid email and password ",
+                    icon: "error"
+                });
+            }
+        })
+        .catch(function (error) {
+            console.error("Registration failed:", error);
+            Swal.fire({
+                title: "Oops...",
+                text: "Registration failed. Please try again later.",
+                icon: "error"
+            });
+        });
+    }
+</script>
+</html>

@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Register</title>
+    <%- include('../../partials/link.ejs') %>
+    <style>
+        .register-form {
+            max-width: 400px;
+            margin: auto;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            background-color: #fff;
+            box-shadow: 0px 0px 10px 0px rgba(0,0,0,0.1);
+        }
+        .register-form h2 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .register-form .form-control {
+            border-radius: 20px;
+        }
+        .register-form .btn-primary {
+            width: 100%;
+            border-radius: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container" style="margin-top: 100px;">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="register-form">
+                <h2>Admin Register</h2>
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Name</label>
+                        <input type="text" class="form-control" id="name" placeholder="Enter name" onchange="validateName()" onkeypress="validateName()">
+                        <div id="nameError" class="text-danger"></div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email address</label>
+                        <input type="email" class="form-control" id="email" placeholder="Enter email" onchange="validateEmail()" onkeypress="validateEmail()" onkeyup="validateEmail()">
+                        <div id="emailError" class="text-danger"></div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Password</label>
+                        <input type="password" class="form-control" id="password" placeholder="Password" onchange="validatePassword()" onkeypress="validatePassword()">
+                        <div id="passwordError" class="text-danger"></div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="confirm-password" class="form-label">Confirm Password</label>
+                        <input type="password" class="form-control" id="confirm-password" placeholder="Confirm Password" onkeyup="validatePasswordMatch()" onchange="validatePasswordMatch()">
+                        <div id="passwordMatchError" class="text-danger"></div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="profile_photo" class="form-label">Select Profile Photo : </label>
+                        <input type="file" name="profile_photo" id="profile_photo" accept=".jpg,.png,.jpeg" onchange="validateImage(this)"/>
+                        <div id="profileError" class="text-danger"></div>
+                    </div>
+                    <a class="text-primary" href="/AdminLogin">Already Registered?</a><br><br>
+                    <button id="register" class="btn btn-primary">Register</button>
+            </div>  
+        </div>
+    </div>
+</div>
+<script>
+    function validatePasswordMatch() {
+        const password = document.getElementById('password').value;
+        const confirmPassword = document.getElementById('confirm-password').value;
+        const passwordMatchError = document.getElementById('passwordMatchError');
+
+        if (password !== confirmPassword) {
+            passwordMatchError.textContent = 'Passwords do not match';
+        } else {
+            passwordMatchError.textContent = '';
+        }
+    }
+
+
+    function validatePassword() {
+        const password = document.getElementById("password").value;
+        const passwordError = document.getElementById("passwordError");
+
+        if (password == "") {
+            passwordError.textContent = "Password is required";
+            document.getElementById('password').style.border = "2px solid red";
+        } else if (!/^(?=.*\d)(?=.*[a-zA-Z]).{8,}$/.test(password)) {
+            passwordError.textContent =
+                "Password must be at least 8 characters long and contain a mix of letters and digits.";
+            document.getElementById('password').style.border = "2px solid red";
+        } else {
+            passwordError.textContent = "";
+            document.getElementById('password').style.border = "";
+        }
+    }
+
+    function validateName() {
+        const name = document.getElementById("name").value;
+        const nameError = document.getElementById("nameError");
+
+        if (name === "") {
+          nameError.innerHTML = "Name is Required.";
+          document.getElementById('name').style.border = "2px solid red";
+        } else if (name.length < 3 || !/^[a-zA-Z]+$/.test(name)) {
+          nameError.textContent =
+            "Name must be at least 3 characters long and contain only letters.";
+            document.getElementById("name").style.border = "2px solid red";
+        } else {
+          nameError.textContent = "";
+          document.getElementById("name").style.border = "";
+        }
+      }
+
+      function validateEmail() {
+        const emailInput = document.getElementById("email");
+        const emailError = document.getElementById("emailError");
+        const email = emailInput.value.trim();
+
+        if (email === "") {
+            document.getElementById('email').style.border = "2px solid red";
+        } else if (!/\S+@\S+\.\S+/.test(email)) {
+            emailError.textContent = "Invalid email format.";
+            document.getElementById('email').style.border = "2px solid red";
+        } else {
+            try {
+               fetch(`/checkavlemail?email=${encodeURIComponent(email)}`).then((response) => {
+                   response.json().then((data) => {
+                       if (data.available) {
+                          emailError.textContent = "This email address is already in use.";
+                          emailInput.style.border = "2px solid red";
+                       } else {
+                          emailError.textContent = ""
+                          emailInput.style.border = "";
+                       }
+                   })
+                }).catch((err) => console.log(err));
+            } catch (error) {
+                console.error('Error checking email availability:', error);
+            }
+        }
+      }
+
+      function validateImage(){
+        var fileInput = document.getElementById('profile_photo');
+        const file = fileInput.files[0];
+
+        if(!file){
+            fileInput.value = "";
+            return Swal.fire({
+                title: "Oops...!",
+                text: "Please select file!",
+                icon: "error"
+            })
+        }else if(file.type != 'image/jpeg' && file.type != 'image/jpg' && file.type  != 'image/png'){
+            fileInput.value = "";
+            return Swal.fire({
+                title: "Oops...!",
+                text: "You can only upload only jpg,jpeg,png file!",
+                icon: "warning"
+            });
+        }else if(file.size > 5 * 1024 * 1024){
+            fileInput.value = "";
+            return Swal.fire({
+                title: "Oops...!",
+                text: "File size must be less than or equal to 5MB.",
+                icon: "warning"
+            });
+        }
+    }
+
+
+    document.addEventListener('DOMContentLoaded', function () {
+    document.getElementById('register').addEventListener('click', function () {
+        var name = document.getElementById('name').value; // Get the name input value
+        var email = document.getElementById('email').value; // Get the email input value
+        var password = document.getElementById('password').value; // Get the password input value
+        var fileInput = document.getElementById('profile_photo');
+        const file = fileInput.files[0];
+
+        if(name == "" || email == "" ||  password == ""){
+            return Swal.fire({
+                title: "Oops...!",
+                text: "All fields are required!",
+                icon: "error"
+            });
+        }
+
+        const apiData = new FormData();
+        apiData.append('name',name);
+        apiData.append('email', email);
+        apiData.append('password', password);
+        apiData.append('profile_photo',file);
+
+        fetch('/addadmin', {
+            method: 'POST',
+            body: apiData,
+        })
+        .then(function (response) {
+            if (response.ok) {
+                return response.json();
+            }
+            throw new Error('Network response was not ok.');
+        })
+        .then(function (data) {
+            Swal.fire({
+                title: "Good job!",
+                text: "Registration is successful!",
+                icon: "success"
+            }).then(function (result) {
+                sessionStorage.setItem('token',data.token);
+                if (result.isConfirmed) {
+                    location.replace("/Aloader");
+                }
+            });
+        })
+        .catch(function (error) {
+            console.log("Registration failed:", error);
+            Swal.fire({
+                title: "Oops...",
+                text: "Registration failed. Please try again later.",
+                icon: "error"
+            });
+        });
+    });
+});
+
+</script>
+
+</script>
+
+</body>
+</html>

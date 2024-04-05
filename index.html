@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Your Account Details</title>
+<style>
+    /* Reset CSS */
+    body, html {
+        margin: 0;
+        padding: 0;
+        font-family: Arial, sans-serif;
+        line-height: 1.6;
+    }
+    /* Container Styles */
+    .container {
+        max-width: 600px;
+        margin: 20px auto;
+        padding: 20px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        background-color: #f9f9f9;
+    }
+    /* Header Styles */
+    .header {
+        text-align: center;
+        margin-bottom: 20px;
+    }
+    .header h1 {
+        color: #333;
+        margin-top: 0;
+    }
+    /* Content Styles */
+    .content {
+        margin-bottom: 20px;
+    }
+    .content p {
+        margin: 10px 0;
+    }
+    /* Button Styles */
+    .btn {
+        display: inline-block;
+        padding: 10px 20px;
+        background-color: #007bff;
+        color: #fff;
+        text-decoration: none;
+        border-radius: 5px;
+    }
+    .btn:hover {
+        background-color: #0056b3;
+    }
+</style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>Your Account Details</h1>
+    </div>
+    <div class="content">
+        <p>Dear ${name},</p>
+        <p>Thank you for creating an account with us. Here are your login details:</p>
+        <table border="2">
+            <tr>
+                <td style="background-color: burlywood;"><p><strong>Email:</strong></p></td>
+                <td><p>${email}</p></td>
+            </tr>
+            <tr>
+                <td style="background-color: burlywood;"><p><strong>Password:</strong> </p></td>
+                <td><p>${password}</p></td>
+            </tr>
+        </table>
+        <p>Please keep this information secure and do not share it with anyone.</p>
+        <p>If you have any questions or concerns, feel free to <a href="[Your Contact Page URL]" class="btn">Contact Us</a>.</p>
+        <p>Best regards,<br>Your Company Name</p>
+    </div>
+</div>
+</body>
+</html>

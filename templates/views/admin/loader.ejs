@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Loading...</title>
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #ffffff; /* Set background color as desired */
+        }
+
+        .loader {
+            width: 200px; /* Adjust width of loader as desired */
+            height: 200px; /* Adjust height of loader as desired */
+            background-image: url('Spinner.gif'); /* Path to your Spinner.gif image */
+            background-size: cover;
+        }
+    </style>
+</head>
+<body>
+    <div class="loader"></div>
+    <script>
+        setTimeout(()=>{
+            location.replace("/adminIndex");
+        }, 1000)
+    </script>
+</body>
+</html>

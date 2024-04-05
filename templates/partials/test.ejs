@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashbord</title>
+    <%- include('../../partials/link.ejs') %>
+</head>
+<body>
+    <%- include('../../partials/admin_navbar.ejs') %>
+    <div class="container">
+    </div>
+</body>
+<script>
+
+    if(!localStorage.getItem('token')){
+        window.location.href = '/adminLogin'
+    }
+
+    $(document).ready(async()=>{
+
+            const token = localStorage.getItem("token");
+
+            try {
+                const response = await fetch('/getdetils', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                });
+
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+
+                const data = await response.json();
+            
+                const profile = `<h1 class='text-center text-light p-2 rounded' style="background-color: #0e2238;">Admin Profile</h1>
+                    <div class='col-md-12 mt-3'>
+                        <center>
+                            <div class="card animate__animated animate__flipInY" style="width: 20rem;">
+                                <img src="${data.profile_photo}" class="card-img-top" alt="...">
+                                <div class="card-body">
+                                   <h4>Name : - &nbsp;<span class='text-ptimary'>${data.name}</span></h4><hr>
+                                   <h4>Email : - &nbsp;<span class='text-ptimary'>${data.email}</span></h4>
+                                </div>
+                            </div>
+                        </center>
+                    <div>
+                `;
+                $("#root").html(profile);
+            } catch (error) {
+                console.error('There was a problem with the fetch adminDetails:', error);
+            }
+    });
+</script>
+</html>
