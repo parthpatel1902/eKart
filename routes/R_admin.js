@@ -11,6 +11,7 @@ router.get('/logout', multipartMiddleware,adminController.adminlogout);
 router.get('/checkavlemail',adminController.checkavlemail);
 router.get("/sendMail",adminController.sendEmail);
 router.post("/updatePassword",multipartMiddleware,adminController.updatePassword);
+router.post("/changePassword",auth.tokenCheck,multipartMiddleware,adminController.changePassword);
 
 
 // token api

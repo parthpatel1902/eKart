@@ -23,6 +23,12 @@
             width: 100px; /* Adjust the size as needed */
             height: 100px; /* Adjust the size as needed */
         }
+        body {
+            font-family: Arial, sans-serif;
+        }
+        .jumbotron {
+            background-color: #f8f9fa;
+        }
     </style>
 </head>
 <body>
@@ -31,7 +37,21 @@
     </div>
     <%- include('../../partials/navbar.ejs') %>
     <div>
-        <h1>about page</h1>
+        <div class="container mt-5">
+            <div class="jumbotron">
+              <h1 class="display-4">About User Management System</h1>
+              <p class="lead">User Management System is a web application designed to simplify the process of managing users in an organization or a system. It provides a user-friendly interface for administrators to perform various user management tasks efficiently.</p>
+              <hr class="my-4">
+              <h2>Features:</h2>
+              <ul>
+                <li>User Creation: Allows administrators to create new user accounts.</li>
+                <li>User Editing: Provides the ability to edit existing user profiles.</li>
+                <li>User Deletion: Allows administrators to delete user accounts if necessary.</li>
+                <li>Settings Configuration: Enables administrators to configure system settings related to user management.</li>
+              </ul>
+              <p>For any inquiries or support, please contact us at <a href="mailto:info@example.com">info@example.com</a>.</p>
+            </div>
+        </div>
     </div>
     <script>
         window.addEventListener('load', function() {

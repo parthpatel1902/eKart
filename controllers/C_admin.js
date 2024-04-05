@@ -313,6 +313,25 @@ const updatePassword = async (req,res)=>{
     return res.json({success:true});
 }
 
+const changePassword = async (req,res)=>{
+    const {oldpass,newpass} = req.body;
+    id = req.user.id;
+    const checkPassword = await admin.findOne({_id : id , password : oldpass});
+
+    if(!checkPassword){
+        return errorRes(res,503,'Invalid Password')
+    }
+
+    const updatePassword = await admin.findByIdAndUpdate(id,{password:newpass})
+
+    if(updatePassword){
+        return res.json({success:true});
+    }else{
+        return res.json({success:false});
+    }
+
+}
+
 const checkAvl = async (req, res) => {
     try {
         const { email , mobile ,id } = req.query;
@@ -448,5 +467,5 @@ const updateUser = async(req,res)=>{
 
 module.exports = {
     addadmin,upload,adminlogin,adminlogout,checkavlemail,sendEmail,updatePassword,getdetails,addUser
-    ,getUserDetails,deleteUser,checkAvl,updateUser
+    ,getUserDetails,deleteUser,checkAvl,updateUser,changePassword
 }

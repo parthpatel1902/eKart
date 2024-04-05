@@ -1,10 +1,41 @@
 <html>
   <%- include('../../partials/admin_navbar.ejs') %>
 
+  <div class="modal fade" id="changePassword" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h1 class="modal-title fs-5" id="exampleModalLabel">Update admin password</h1>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+            <div class="mb-3">
+                <label for="password" class="form-label">Current Password</label>
+                <input type="password" class="form-control" id="oldpassword" placeholder="Enter current password">
+            </div>
+            <div class="mb-3">
+                <label for="password" class="form-label">New Password</label>
+                <input type="password" class="form-control" id="password" placeholder="Enter new password" onchange="validatePassword()" onkeypress="validatePassword()">
+                <div id="passwordError" class="text-danger"></div>
+            </div>
+            <div class="mb-3">
+                <label for="confirm-password" class="form-label">Confirm Password</label>
+                <input type="password" class="form-control" id="confirm-password" placeholder="Enter confirm password" onkeyup="validatePasswordMatch()" onchange="validatePasswordMatch()">
+                <div id="passwordMatchError" class="text-danger"></div>
+            </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" onclick="closeModel()">Close</button>
+          <button type="button" class="btn btn-primary" onclick="updatePassword(event)">Change password</button>
+        </div>
+      </div>
+    </div>
+</div>
+
   <main id="main" class="main">
 
     <div class="pagetitle">
-      <h1>Admin Profile</h1>
+           <div class="d-flex justify-content-end"><button class="btn btn-dark" data-bs-toggle="modal" data-bs-target="#changePassword">Change Password</button></div>
     </div><!-- End Page Title -->
 
     <section class="section dashboard">
@@ -37,7 +68,85 @@
 
 
   <script>
-         $(document).ready(async()=>{
+
+    async function updatePassword(event){
+        event.preventDefault();
+        
+        const oldpass = document.getElementById('oldpassword').value;
+        const newpass = document.getElementById('password').value;
+    
+        if(newpass == '' || oldpass == ''){
+            return Swal.fire({
+                icon: 'error',
+                title: 'Oops...',
+                text: 'All field is required!'
+            })
+        }
+
+        const formData = new FormData();
+        formData.append('oldpass', oldpass);
+        formData.append('newpass', newpass);
+
+        const token = localStorage.getItem('token');
+
+        try {
+            const response = await fetch("/changePassword",{
+                method:'POST',
+                headers:{
+                    'Authorization':`Bearer ${token}`
+                },
+                body:formData
+            })
+
+            const data = await response.json();
+
+            if(data.success){
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Great!',
+                    text: 'Password is update successfully!'
+                }).then((data)=>{
+                    if(data.isConfirmed){
+                        location.reload();
+                    }
+                })
+            }
+
+        } catch (error) {
+            console.log(error);
+        }
+    }
+
+    function validatePasswordMatch() {
+        const password = document.getElementById('password').value;
+        const confirmPassword = document.getElementById('confirm-password').value;
+        const passwordMatchError = document.getElementById('passwordMatchError');
+
+        if (password !== confirmPassword) {
+            passwordMatchError.textContent = 'Passwords do not match';
+        } else {
+            passwordMatchError.textContent = '';
+        }
+    }
+
+    function validatePassword() {
+        const password = document.getElementById("password").value;
+        const passwordError = document.getElementById("passwordError");
+
+        if (password == "") {
+            passwordError.textContent = "Password is required";
+            document.getElementById('password').style.border = "2px solid red";
+        } else if (!/^(?=.*\d)(?=.*[a-zA-Z]).{8,}$/.test(password)) {
+            passwordError.textContent =
+                "Password must be at least 8 characters long and contain a mix of letters and digits.";
+            document.getElementById('password').style.border = "2px solid red";
+        } else {
+            passwordError.textContent = "";
+            document.getElementById('password').style.border = "";
+        }
+    }
+    
+    $(document).ready(async()=>{
 
                 const token = localStorage.getItem("token");
 
@@ -56,7 +165,7 @@
 
                     const data = await response.json();
 
-                    const profile = `<h1 class='text-center text-light p-1 rounded' style="background-color: #0e2238;">Admin Profile</h1>
+                    const profile = `<h1 class='text-center text-light rounded' style="background-color: #0e2238;">Admin Profile</h1>
                         <div class='col-md-12 mt-3'>
                             <center>
                                 <div class="card animate__animated animate__flipInY" style="width: 20rem;">
@@ -74,6 +183,10 @@
                 console.error('There was a problem with the fetch adminDetails:', error);
             }
         });
+  
+    function closeModel(){
+        location.reload();
+    }
   </script>
 
 

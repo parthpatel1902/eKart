@@ -35,7 +35,7 @@ router.post('/uploadData', auth.tokenCheck,uploadFile.single('fileData'), async(
                date:item.date,
                logintime:item.logintime,
                logouttime:item.logouttime,
-               id:req.user.id
+               adminId:req.user.id
             };
 
             const res_add = new userActivity(insert_data);

@@ -119,6 +119,8 @@
       const formData = new FormData();
       formData.append('fileData', file);
 
+      const token = localStorage.getItem('token');
+
       try {
           
           const response = await fetch('/uploadData', {

@@ -23,6 +23,13 @@
             width: 100px; /* Adjust the size as needed */
             height: 100px; /* Adjust the size as needed */
         }
+        /* Custom styles */
+        body {
+        font-family: Arial, sans-serif;
+        }
+        .jumbotron {
+        background-color: #f8f9fa;
+        }
     </style>
 </head>
 <body>
@@ -31,7 +38,14 @@
     </div>
     <%- include('../../partials/navbar.ejs') %>
     <div>
-        <h1>home page</h1>
+        <div class="container mt-5">
+            <div class="jumbotron">
+              <h1 class="display-4">Welcome to User Management System</h1>
+              <p class="lead">This system allows you to manage users efficiently. You can add, edit, and delete users as well as configure various settings.</p>
+              <hr class="my-4">
+              <p>To get started, use the navigation bar above to explore the system.</p>
+            </div>
+          </div>
     </div>
     <script>
         window.addEventListener('load', function() {
