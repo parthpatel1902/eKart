@@ -52,4 +52,11 @@ router.get("/getactivity",auth.tokenCheck,userController.getActivity);
 router.get("/downloadExcel",userController.getExcel);
 router.get("/downloadCsv",userController.getCsv);
 
+router.post("/userlogin",multipartMiddleware,userController.userLogin);
+router.get("/getuser",auth.tokenCheck,userController.getUser);
+router.get("/otpemail",userController.sendEmailForForgetPassword);
+router.get("/otpemail",userController.sendEmailForForgetPassword);
+router.post("/forgetpassword",multipartMiddleware,userController.forgetPassword);
+router.post("/changeUserPassword",auth.tokenCheck,multipartMiddleware,userController.changePassword);
+
 module.exports = router;

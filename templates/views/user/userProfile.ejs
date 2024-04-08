@@ -1,0 +1,581 @@
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>User Profile</title>
+    <%- include('../../partials/link.ejs') %>
+    <style>
+      /* Styles for the loader */
+      #loader {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(255, 255, 255, 0.7);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+      }
+      #loader img {
+        width: 100px; /* Adjust the size as needed */
+        height: 100px; /* Adjust the size as needed */
+      }
+      /* Custom styles */
+      body {
+        font-family: Arial, sans-serif;
+      }
+      .jumbotron {
+        background-color: #f8f9fa;
+      }
+      .profile-card {
+        max-width: 500px;
+        margin: 50px auto;
+        background-color: #fff;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+      }
+      .profile-img {
+        width: 150px;
+        height: 150px;
+        border-radius: 50%;
+        margin: 0 auto 20px;
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+
+    <!-- edit user's profile model  -->
+
+    <div class="modal fade" id="editProfile" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="exampleModalLabel">Edit Profile</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <!-- <form action=""> -->
+              <input type="hidden" id="userId"/>
+              <div class="mb-3">
+                <label for="name" class="form-label">Name</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="name1"
+                  name="name1"
+                  onkeydown="restrictInputName(event)"
+                  placeholder="Enter the name"
+                  onkeyup="validateName1()"
+                  maxlength="20"
+                  onblur="validateName1()"
+                />
+                <div id="nameError1" class="text-danger"></div>
+              </div>
+              <div class="mb-3">
+                <label for="email1" class="form-label">Email</label>
+                <input
+                  type="email"
+                  class="form-control"
+                  id="email1"
+                  name="email1"
+                  onkeyup="validateEmail1()"
+                  onblur="validateEmail1()"
+                  placeholder="Enter the email"
+                />
+                <div id="emailError1" class="text-danger"></div>
+              </div>
+              <div class="mb-3">
+                <label for="mobile" class="form-label">Mobile</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="mobile1"
+                  name="mobile1"
+                  onkeyup="validateMobile1()"
+                  onkeydown="restrictInput(event)"
+                  onblur="validateMobile1()"
+                  maxlength="10"
+                  placeholder="Enter the mobile"
+                />
+                <div id="mobileError1" class="text-danger"></div>
+              </div>
+              <div class="mb-3">
+                <label for="gender" class="form-label">Select Gender:</label
+                ><br />
+                <input
+                  class="form-check-input"
+                  type="radio"
+                  value="male"
+                  name="gender1"
+                  id="male1"
+                  onchange="validateGender()"
+                />
+                <label class="form-check-label" for="male">Male</label>
+                <input
+                  class="form-check-input"
+                  type="radio"
+                  value="female"
+                  name="gender1"
+                  id="female1"
+                  onchange="validateGender()"
+                />
+                <label class="form-check-label" for="female">Female</label>
+                <div id="genderError" class="text-danger"></div>
+              </div>
+              <div class="mb-3">
+                <label for="address" class="form-label">Address</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="address1"
+                  name="address1"
+                  placeholder="Enter the address"
+                  onchange="validateAddress1()"
+                  onkeypress="validateAddress1()"
+                />
+                <div id="addressError1" class="text-danger"></div>
+              </div>
+              <div class="mb-3">
+                <label for="userprofile" class="form-label">Select user  profile picture :</label>
+                <input
+                  type="file"
+                  class="form-control"
+                  id="userprofile1"
+                  name="userprofile1"
+                />
+                <div id="profilePictureError1" class="text-danger"></div>
+              </div>
+              <div class="mb-3">
+                <center>
+                  <button class="btn btn-dark" onclick="handleUpdate(event)">Update</button>
+                  <button class="btn btn-danger" data-bs-dismiss="modal">Close</button>
+                </center>
+              </div>
+            <!-- </form> -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- End edit user's profile model  -->
+
+    <!-- change password model  -->
+
+    <div class="modal fade" id="changePassword" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h1 class="modal-title fs-5" id="exampleModalLabel">Update admin password</h1>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+              <div class="mb-3">
+                  <label for="password" class="form-label">Current Password</label>
+                  <input type="password" class="form-control" id="oldpassword" placeholder="Enter current password">
+              </div>
+              <div class="mb-3">
+                  <label for="password" class="form-label">New Password</label>
+                  <input type="password" class="form-control" id="password" placeholder="Enter new password" onchange="validatePassword()" onkeypress="validatePassword()">
+                  <div id="passwordError" class="text-danger"></div>
+              </div>
+              <div class="mb-3">
+                  <label for="confirm-password" class="form-label">Confirm Password</label>
+                  <input type="password" class="form-control" id="confirm-password" placeholder="Enter confirm password" onkeyup="validatePasswordMatch()" onchange="validatePasswordMatch()">
+                  <div id="passwordMatchError" class="text-danger"></div>
+              </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            <button type="button" class="btn btn-primary" onclick="updatePassword(event)">Change password</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- end of change password model -->
+
+    <div id="loader">
+      <img src="Spinner.gif" alt="Loading..." />
+    </div>
+    <%- include('../../partials/navbar.ejs') %>
+    <div>
+      <div class="container">
+        <div class="profile-card">
+          <img
+            src=""
+            alt="Profile Picture"
+            class="profile-img"
+            id="userProfile"
+          />
+          <h2 class="text-center" id="name"></h2>
+          <p class="text-muted text-center" id="email"></p>
+          <hr />
+          <div class="row">
+            <div class="col-md-6">
+                <h5><strong>Mobile:</strong></h5>
+                <p id="mobile"></p>
+                <h5><strong>Gender:</strong></h5>
+                <p id="gender"></p>
+            </div>
+            <div class="col-md-6">
+                <h5><strong>Email:</strong></h5>
+                <p id="userEmail"></p>
+                <h5><strong>Address:</strong></h5>
+                <p id="address"></p>
+            </div>
+          </div>
+          <div class="text-center">
+            <a href="#" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#editProfile">Edit Profile</a>
+            <a href="#" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#changePassword">Change Password</a>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script>
+    window.addEventListener("load", function () {
+        if(!localStorage.getItem('token')){
+            location.href = '/';
+        }
+        setTimeout(function () {
+          document.getElementById("loader").style.display = "none";
+        }, 1000);
+      });
+
+
+    showProfile();
+    async function showProfile(){
+      const token = localStorage.getItem('token');
+      if(localStorage.getItem('token')){
+        try {
+          const resData = await fetch("/getuser",{
+            method:'GET',
+            headers:{
+              'Content-Type':'application/json',
+              'Authorization':`Bearer ${token}`
+            }
+          });
+
+          const resjson = await resData.json();
+
+          document.getElementById('name').innerText= `${resjson.data[0].name}`;
+          document.getElementById('userEmail').innerText=`${resjson.data[0].email}`;
+          document.getElementById('address').innerText=`${resjson.data[0].address}`;
+          document.getElementById('gender').innerText=`${resjson.data[0].gender}`;
+          document.getElementById('mobile').innerText=`+91 ${resjson.data[0].mobile}`;
+          document.getElementById('userProfile').src = resjson.data[0].userProfile;
+
+          document.getElementById('userId').value = resjson.data[0]._id
+          document.getElementById('name1').value = resjson.data[0].name;
+          document.getElementById('email1').value = resjson.data[0].email;
+          document.getElementById('mobile1').value = resjson.data[0].mobile;
+          document.getElementById(`${resjson.data[0].gender}1`).setAttribute('checked', 'true');
+          document.getElementById('address1').value = resjson.data[0].address;
+        
+        } catch (error) {
+          console.log("Error to find profile picture : ",error)
+        }
+        
+      }else{
+        document.getElementById('root').innerHTML = `<button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#loginModel">login</button>`
+      }
+    }
+
+    function validateName1() {
+        const name = document.getElementById("name1").value;
+        const nameError = document.getElementById("nameError1");
+
+        if (name === "") {
+          nameError.innerHTML = "Name is Required.";
+          document.getElementById('name1').style.border = "2px solid red";
+        } else if (name.length < 3 || !/^[a-zA-Z]+$/.test(name)) {
+          nameError.textContent =
+            "Name must be at least 3 characters long and contain only letters.";
+            document.getElementById("name1").style.border = "2px solid red";
+        } else {
+          nameError.textContent = "";
+          document.getElementById("name1").style.border = "";
+        }
+    }
+
+    function validateEmail1() {
+        const emailInput = document.getElementById("email1");
+        const emailError = document.getElementById("emailError1");
+        const email = emailInput.value.trim();
+
+        if (email === "") {
+            emailError.textContent = "Email is required.";
+            document.getElementById('email1').style.border = "2px solid red";
+        } else if (!/\S+@\S+\.\S+/.test(email)) {
+            emailError.textContent = "Invalid email format.";
+            document.getElementById('email1').style.border = "2px solid red";
+        } else {
+            const id = document.getElementById('userId').value;
+            try {
+               fetch(`/checkavl?email=${encodeURIComponent(email)}&id=${id}`).then((response) => {
+                   response.json().then((data) => {
+                       if (data.available) {
+                          emailError.textContent = "This email address is already in use.";
+                          emailInput.style.border = "2px solid red";
+                       } else {
+                          emailError.textContent = ""
+                          emailInput.style.border = "";
+                       }
+                   })
+                }).catch((err) => console.log(err));
+            } catch (error) {
+                console.error('Error checking email availability:', error);
+            }
+        }
+      }
+
+    function validateMobile1() {
+        const mobile = document.getElementById("mobile1").value;
+        const mobileError = document.getElementById("mobileError1");
+
+        if (mobile == "") {
+          mobileError.textContent = "Mobile is required";
+          document.getElementById('mobile1').style.border = "2px solid red";
+        } else if (!/^\d{10}$/.test(mobile)) {
+          mobileError.textContent = "Mobile must be 10 digits long";
+          document.getElementById('mobile1').style.border = "2px solid red";
+        } else {
+              const id = document.getElementById('userId').value;
+          try {
+               fetch(`/checkavl?mobile=${encodeURIComponent(mobile)}&id=${id}`).then((response) => {
+                   response.json().then((data) => {
+                       if (data.available) {
+                          mobileError.textContent = "This mobile is already in use.";
+                          document.getElementById('mobile1').style.border = "2px solid red";
+                       } else {
+                          mobileError.textContent = ""
+                          document.getElementById('mobile1').style.border = "";
+                       }
+                   })
+                }).catch((err) => console.log(err));
+            } catch (error) {
+                console.error('Error checking email availability:', error);
+            }
+        }
+      }
+
+    function validateAddress1() {
+      const address = document.getElementById("address1").value;
+      const addressError = document.getElementById("addressError1");
+
+      if (address.trim() === "") {
+        addressError.textContent = "Address is required.";
+        document.getElementById('address1').style.border = "2px solid red";
+      } else if (/^\d+$/.test(address)) {
+        addressError.textContent = "Address cannot contain only numbers.";
+        document.getElementById('address1').style.border = "2px solid red";
+      }
+      else {
+        addressError.textContent = "";
+        document.getElementById('address1').style.border = "";
+      }
+    }
+
+    function validatePassword() {
+        const password = document.getElementById("password").value;
+        const passwordError = document.getElementById("passwordError");
+
+        if (password == "") {
+          passwordError.textContent = "Password is required";
+          document.getElementById('password').style.border = "2px solid red";
+        } else if (!/^(?=.*\d)(?=.*[a-zA-Z]).{8,}$/.test(password)) {
+          passwordError.textContent =
+            "Password must be at least 8 characters long and contain a mix of letters and digits.";
+          document.getElementById('password').style.border = "2px solid red";
+        } else {
+          passwordError.textContent = "";
+          document.getElementById('password').style.border = "";
+        }
+      }
+
+    function restrictInput(event) {
+      const keyPressed = event.key;
+
+        // Check if the key pressed is a digit (0-9) or the backspace key
+      if (
+        !/^\d$/.test(keyPressed) &&
+        keyPressed !== "Backspace" &&
+        keyPressed !== "ArrowLeft" &&
+        keyPressed !== "ArrowRight"
+      ) {
+        event.preventDefault(); // Prevent non-numeric characters from being entered
+      }
+    }
+
+    function restrictInputName(event){
+        const keyPressed = event.key;
+        if(!/^[a-zA-Z]+$/.test(keyPressed) && keyPressed !== "ArrowLeft" && keyPressed !== "ArrowRight" )
+        {
+          event.preventDefault();
+        }
+      }
+
+    async function handleUpdate(event){
+      event.preventDefault();
+
+      const id = document.getElementById('userId').value;
+      const name = document.getElementById('name1').value;
+      const email = document.getElementById('email1').value;
+      const mobile = document.getElementById('mobile1').value;
+      const address  = document.getElementById('address1').value;
+      const userProfile =  document.getElementById('userprofile1');
+      const file = userProfile.files[0];
+      let gender;
+      if (document.getElementById("male1").checked) {
+        gender = "male";
+      } else if (document.getElementById("female1").checked) {
+        gender = "female";
+      }
+
+      if(name == "" || email == "" || mobile == "" || address == "" || password == "" ||  !gender ){
+        return Swal.fire({
+          icon: 'error',
+          title: 'Oops...',
+          text: 'Please fill all fields!',
+        })
+      }
+
+      const apiData = new FormData();
+      if(file===undefined){
+        apiData.append('name',name);
+        apiData.append('email', email);
+        apiData.append('mobile', mobile);
+        apiData.append('gender', gender);
+        apiData.append('address', address);
+      }else{
+        apiData.append('name',name);
+        apiData.append('email', email);
+        apiData.append('mobile', mobile);
+        apiData.append('gender', gender);
+        apiData.append('address', address);
+        apiData.append('userProfile',file);
+      }
+
+      try {
+        const responseAdduser = await fetch(`/updateuser/${id}`, {
+          method: 'POST',
+          body: apiData,
+        });
+
+        if (!responseAdduser.ok) {
+          throw new Error('Failed to add user');
+        }
+
+        const responseData = await responseAdduser.json();
+        if(responseData.success){
+          Swal.fire({
+                title: "Great !",
+                text: "User is updated succesfully!",
+                icon: "success"
+          }).then((result)=>{
+            if (result.isConfirmed) {
+                location.reload();
+            }
+          })
+        }
+
+      } catch (error) {
+        console.error("Error from the responseAdduser >> ",error)
+      }
+
+      
+    }
+
+    async function updatePassword(event){
+        event.preventDefault();
+        
+        const oldpass = document.getElementById('oldpassword').value;
+        const newpass = document.getElementById('password').value;
+    
+        if(newpass == '' || oldpass == ''){
+            return Swal.fire({
+                icon: 'error',
+                title: 'Oops...',
+                text: 'All field is required!'
+            })
+        }
+
+        const formData = new FormData();
+        formData.append('oldpass', oldpass);
+        formData.append('newpass', newpass);
+
+        const token = localStorage.getItem('token');
+
+        try {
+            const response = await fetch("/changeUserPassword",{
+                method:'POST',
+                headers:{
+                    'Authorization':`Bearer ${token}`
+                },
+                body:formData
+            })
+
+            const data = await response.json();
+
+            if(data.message == 'Invalid Password'){
+              return  Swal.fire({
+                      icon: 'warning',
+                      title: 'Warning!',
+                      text: "Old password doesn't match"
+                   });
+            }
+
+            if(data.success){
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Great!',
+                    text: 'Password is update successfully!'
+                }).then((data)=>{
+                    if(data.isConfirmed){
+                        location.reload();
+                    }
+                })
+            }
+
+        } catch (error) {
+            console.log(error);
+        }
+    }
+
+    function validatePasswordMatch() {
+        const password = document.getElementById('password').value;
+        const confirmPassword = document.getElementById('confirm-password').value;
+        const passwordMatchError = document.getElementById('passwordMatchError');
+
+        if (password !== confirmPassword) {
+            passwordMatchError.textContent = 'Passwords do not match';
+        } else {
+            passwordMatchError.textContent = '';
+        }
+    }
+
+    function validatePassword() {
+        const password = document.getElementById("password").value;
+        const passwordError = document.getElementById("passwordError");
+
+        if (password == "") {
+            passwordError.textContent = "Password is required";
+            document.getElementById('password').style.border = "2px solid red";
+        } else if (!/^(?=.*\d)(?=.*[a-zA-Z]).{8,}$/.test(password)) {
+            passwordError.textContent =
+                "Password must be at least 8 characters long and contain a mix of letters and digits.";
+            document.getElementById('password').style.border = "2px solid red";
+        } else {
+            passwordError.textContent = "";
+            document.getElementById('password').style.border = "";
+        }
+    }
+    
+    </script>
+  </body>
+</html>

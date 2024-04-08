@@ -446,8 +446,6 @@ const updateUser = async(req,res)=>{
 
     const {email,password,name} = req.body; 
 
-    console.log(req.body);
-
     sendEmailPassword(email,password,name);
 
     if(req.file){

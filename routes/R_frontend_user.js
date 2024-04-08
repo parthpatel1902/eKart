@@ -14,4 +14,12 @@ router.get("/todo",async(req,res)=>{
     res.render("user/todo")
 })
 
+router.get("/userProfile",async(req,res)=>{
+    res.render("user/userProfile")
+})
+
+router.get("/forgetPassword",async(req,res)=>{
+    res.render("user/forgetPassword")
+})
+
 module.exports = router
