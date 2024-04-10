@@ -63,6 +63,11 @@
             <!-- <form action=""> -->
               <input type="hidden" id="userId"/>
               <div class="mb-3">
+                <center>
+                    <img src="" height="100px" width="100px" id="profilephoto" style="border-radius: 50%;"/>
+                </center>
+              </div>
+              <div class="mb-3">
                 <label for="name" class="form-label">Name</label>
                 <input
                   type="text"
@@ -176,8 +181,13 @@
           </div>
           <div class="modal-body">
               <div class="mb-3">
-                  <label for="password" class="form-label">Current Password</label>
-                  <input type="password" class="form-control" id="oldpassword" placeholder="Enter current password">
+                  <label for="password">Password</label>
+                  <div class="input-group">
+                    <input type="password" class="form-control" id="currpassword" placeholder="Enter password" aria-describedby="passwordToggle">
+                    <div class="input-group-append">
+                      <button class="btn btn-outline-secondary" type="button" id="passwordToggle"><i class="fa fa-eye" aria-hidden="true"></i></button>
+                    </div>
+                  </div>
               </div>
               <div class="mb-3">
                   <label for="password" class="form-label">New Password</label>
@@ -238,6 +248,17 @@
       </div>
     </div>
     <script>
+    const inputpass = document.getElementById('currpassword');
+    const passwordTogg = document.getElementById('passwordToggle');
+    console.log(inputpass);
+
+    passwordTogg.addEventListener('click', function() {
+      const type = inputpass.getAttribute('type') === 'password' ? 'text' : 'password';
+      inputpass.setAttribute('type', type);
+      this.innerHTML = type === 'password' ? '<i class="fa fa-eye" aria-hidden="true"></i>' : '<i class="fa fa-eye-slash" aria-hidden="true"></i>';
+    });
+
+
     window.addEventListener("load", function () {
         if(!localStorage.getItem('token')){
             location.href = '/';
@@ -276,6 +297,7 @@
           document.getElementById('mobile1').value = resjson.data[0].mobile;
           document.getElementById(`${resjson.data[0].gender}1`).setAttribute('checked', 'true');
           document.getElementById('address1').value = resjson.data[0].address;
+          document.getElementById('profilephoto').src = resjson.data[0].userProfile;
         
         } catch (error) {
           console.log("Error to find profile picture : ",error)
@@ -494,7 +516,7 @@
     async function updatePassword(event){
         event.preventDefault();
         
-        const oldpass = document.getElementById('oldpassword').value;
+        const oldpass = document.getElementById('currpassword').value;
         const newpass = document.getElementById('password').value;
     
         if(newpass == '' || oldpass == ''){

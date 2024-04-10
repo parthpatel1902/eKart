@@ -12,16 +12,18 @@ const path = require('path');
 
 const addActivity = async(req,res)=>{
 
-    const {name,email,date,logintime,logouttime} = req.body;
+    const {name,email,logintime,logouttime,adminId} = req.body;
+
+    let currentDate = new Date();
 
     const insert_data = {
         name:name,
-        email:email,
-        date:date,
+        email:email,  
+        date:currentDate,
         logintime:logintime,
         logouttime:logouttime,
-        adminId:req.user.id
-    }
+        adminId:adminId
+    };
 
     const res_add = new userActivity(insert_data);
     res_add.save()

@@ -121,6 +121,11 @@
         <form action="">
         <input type="hidden" id="userId"/>
         <div class="mb-3">
+          <center>
+              <img src="" alt="" id="profilephoto" height="100px" width="100px" style="border-radius: 50%;">
+          </center>
+        </div>
+        <div class="mb-3">
           <label for="name" class="form-label">Name</label>
           <input
             type="text"
@@ -336,6 +341,7 @@
       document.getElementById(`${data.gender}1`).setAttribute('checked', 'true');
       document.getElementById('address1').value = data.address;
       document.getElementById('password').value = data.password;
+      document.getElementById('profilephoto').src = data.userProfile;
     }
 
     function togglePasswordVisibility() {

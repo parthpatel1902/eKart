@@ -47,7 +47,7 @@ router.post('/uploadData', auth.tokenCheck,uploadFile.single('fileData'), async(
         res.status(500).json({ error: 'Internal Server Error' });
     }
 });
-router.post("/addactivity",auth.tokenCheck,multipartMiddleware,userController.addActivity);
+router.post("/addactivity",multipartMiddleware,userController.addActivity);
 router.get("/getactivity",auth.tokenCheck,userController.getActivity);
 router.get("/downloadExcel",userController.getExcel);
 router.get("/downloadCsv",userController.getCsv);

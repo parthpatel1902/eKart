@@ -43,9 +43,13 @@
                         <div id="emailError" class="text-danger"></div>
                     </div>
                     <div class="mb-3">
-                        <label for="password" class="form-label">Password</label>
-                        <input type="password" class="form-control" id="password" placeholder="Password">
-                        <div id="passwordError" class="text-danger"></div>
+                        <label for="password">Password</label>
+                        <div class="input-group">
+                            <input type="password" class="form-control" id="password" placeholder="Enter password" aria-describedby="passwordToggle">
+                            <div class="input-group-append">
+                            <button class="btn btn-outline-secondary" type="button" id="passwordToggle"><i class="fa fa-eye" aria-hidden="true"></i></button>
+                            </div>
+                        </div>
                     </div>
                     <div class="mb-3 d-flex">
                         <a class="text-primary" href="/adminRegister">Don't have an account?</a>
@@ -59,6 +63,15 @@
     </div>
 </body>
 <script>
+
+    const passwordField = document.getElementById('password');
+    const passwordToggle = document.getElementById('passwordToggle');
+
+    passwordToggle.addEventListener('click', function() {
+      const type = passwordField.getAttribute('type') === 'password' ? 'text' : 'password';
+      passwordField.setAttribute('type', type);
+      this.innerHTML = type === 'password' ? '<i class="fa fa-eye" aria-hidden="true"></i>' : '<i class="fa fa-eye-slash" aria-hidden="true"></i>';
+    });
 
     function login(){
         var email = document.getElementById('email').value;

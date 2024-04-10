@@ -1,6 +1,6 @@
 <html>
   <%- include('../../partials/admin_navbar.ejs') %>
-
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/js/all.min.js"></script>
   <div class="modal fade" id="changePassword" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
     <div class="modal-dialog">
       <div class="modal-content">
@@ -10,8 +10,13 @@
         </div>
         <div class="modal-body">
             <div class="mb-3">
-                <label for="password" class="form-label">Current Password</label>
-                <input type="password" class="form-control" id="oldpassword" placeholder="Enter current password">
+                <label for="password">Password</label>
+                <div class="input-group">
+                    <input type="password" class="form-control" id="oldpassword" placeholder="Enter password" aria-describedby="passwordToggle">
+                    <div class="input-group-append">
+                    <button class="btn btn-outline-secondary" type="button" id="passwordToggle" style="height: 37px;"><i class="fa fa-eye" aria-hidden="true"></i></button>
+                    </div>
+                </div>
             </div>
             <div class="mb-3">
                 <label for="password" class="form-label">New Password</label>
@@ -68,6 +73,16 @@
 
 
   <script>
+
+    const passwordField = document.getElementById('oldpassword');
+    const passwordToggle = document.getElementById('passwordToggle');
+
+    passwordToggle.addEventListener('click', function() {
+      const type = passwordField.getAttribute('type') === 'password' ? 'text' : 'password';
+      passwordField.setAttribute('type', type);
+      this.innerHTML = type === 'password' ? '<i class="fa fa-eye" aria-hidden="true"></i>' : '<i class="fa fa-eye-slash" aria-hidden="true"></i>';
+    });
+
 
     async function updatePassword(event){
         event.preventDefault();

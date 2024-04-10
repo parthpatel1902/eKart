@@ -1,42 +1,5 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Show Password Icon</title>
-  <!-- Bootstrap CSS -->
-  <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
-  <!-- Custom CSS -->
-  <style>
-    /* Add your custom styles here */
-  </style>
-</head>
-<body>
-  <div class="container mt-5">
-    <div class="form-group">
-      <label for="password">Password</label>
-      <div class="input-group">
-        <input type="password" class="form-control" id="password" placeholder="Enter password" aria-describedby="passwordToggle">
-        <div class="input-group-append">
-          <button class="btn btn-outline-secondary" type="button" id="passwordToggle"><i class="fa fa-eye" aria-hidden="true"></i></button>
-        </div>
-      </div>
-    </div>
-  </div>
+<script>
 
-  <!-- Font Awesome -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/js/all.min.js"></script>
-  <!-- Bootstrap JS -->
-  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-  <script>
-    const passwordField = document.getElementById('password');
-    const passwordToggle = document.getElementById('passwordToggle');
+let currentDate = new Date();
 
-    passwordToggle.addEventListener('click', function() {
-      const type = passwordField.getAttribute('type') === 'password' ? 'text' : 'password';
-      passwordField.setAttribute('type', type);
-      this.innerHTML = type === 'password' ? '<i class="fa fa-eye" aria-hidden="true"></i>' : '<i class="fa fa-eye-slash" aria-hidden="true"></i>';
-    });
-  </script>
-</body>
-</html>
+</script>
