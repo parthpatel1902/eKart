@@ -14,6 +14,8 @@ router.post("/updatePassword",multipartMiddleware,adminController.updatePassword
 router.post("/changePassword",auth.tokenCheck,multipartMiddleware,adminController.changePassword);
 
 
+router.post("/notification",multipartMiddleware,adminController.sentNotification);
+
 // token api
 router.post("/getdetils",multipartMiddleware,auth.tokenCheck,adminController.getdetails);
 

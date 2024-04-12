@@ -8,10 +8,6 @@ router.get('/adminLogin', (req, res) => {
     res.render('admin/A_index')
 })
 
-router.get('/adminRegister', (req, res) => {
-    res.render('admin/A_register')
-})
-
 router.get('/adminProfile', (req, res) => {
     if(req.session.token == undefined){
         return res.redirect("/adminLogin");
@@ -41,6 +37,15 @@ router.get('/adminAdduser', (req, res) => {
         return res.redirect("/adminLogin");
     }
     res.render('admin/A_adduser',{
+        token:req.session.token
+    })
+})
+
+router.get('/notification', (req, res) => {
+    if(req.session.token == undefined){
+        return res.redirect("/adminLogin");
+    }
+    res.render('admin/A_FCM_notification',{
         token:req.session.token
     })
 })

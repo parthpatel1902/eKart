@@ -463,7 +463,44 @@ const updateUser = async(req,res)=>{
 
 }
 
+const sentNotification = async(req,res)=>{
+    try {
+        const name = req.body.name;
+        const token = req.body.token;
+        const imageurl = req.body.imageurl;
+
+        const FCM = require('fcm-node');
+        const serverKey ='AAAAwJ5_dkI:APA91bFnEyIVkV0zEMhA2Wwaoe6E1mgkMtSxrEKkc-4Fx1uyBYW2LRk5RnIUXgpyC_7yc2lasIsXCD6Yv3foMCHQXqoVM1cODWZR1x51bqCXZBr55nJ-PLt5jT9T2DsKwgYiWbt-zhqv';
+        const fcm = new FCM(serverKey);
+
+        const message = {
+            to: token,
+            data: {
+                // Data to be sent to the device
+                postId: '12345',
+            },
+            notification: {
+                // Notification payload
+                title: 'Greeting Message',
+                body: `Good Morning ${name}`,
+                image: imageurl,
+                description: 'Description of the notification'
+            },
+        };
+
+        fcm.send(message, function(err, response) {
+            if (err) {
+                console.log('Error sending FCM:', err);
+            } else {
+                res.json({success:true});
+            }
+        });
+    } catch (error) {
+        console.log("error sent notification : ",error);
+    }
+}
+
 module.exports = {
     addadmin,upload,adminlogin,adminlogout,checkavlemail,sendEmail,updatePassword,getdetails,addUser
-    ,getUserDetails,deleteUser,checkAvl,updateUser,changePassword
+    ,getUserDetails,deleteUser,checkAvl,updateUser,changePassword,sentNotification
 }
