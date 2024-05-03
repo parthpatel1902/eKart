@@ -1,7 +1,7 @@
 express = require('express');
 const router = express.Router();
 var multipart = require('connect-multiparty');
-var multipartMiddleware = multipart()
+var multipartMiddleware = multipart();
 const auth = require('../middleware/auth');
 const userController = require('../controllers/C_user');
 const multer = require('multer');

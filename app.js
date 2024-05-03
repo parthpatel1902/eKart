@@ -6,7 +6,8 @@ const session = require('express-session');
 const userFrontendRouter = require('./routes/R_frontend_user');
 const adminRouter = require('./routes/R_admin');
 const adminFrontendRouter = require('./routes/R_frontend_admin');
-const userRouter = require('./routes/R_user')
+const userRouter = require('./routes/R_user');
+const productRouter = require('./routes/R_product');
 
 // require the ejs files
 const ejs = require('ejs');
@@ -27,6 +28,7 @@ app.use(userFrontendRouter);
 app.use(adminRouter);
 app.use(adminFrontendRouter);
 app.use(userRouter);
+app.use(productRouter);
 
 
 // body-parser 
@@ -39,6 +41,7 @@ app.use(bodyParser.urlencoded({ limit: '50mb',extended: true }));
 const path = require("path");
 app.use(express.static(path.join(__dirname,"./templates/views")))
 app.use(express.static(path.join(__dirname,"./src")))
+app.use(express.static(path.join(__dirname,"./scripts")));
 app.use(express.static(path.join(__dirname,'./uploads')));
 app.use(express.static(path.join(__dirname,'./public')));
 const partialsPath = path.join(__dirname, "./templates/partials");
@@ -68,6 +71,8 @@ require('dotenv').config();
 const port = process.env.PORT;
 app.listen(port, () => {
     console.log(`Server is Running on http://localhost:${port}`);
-});
+}); 
+
+
 
 

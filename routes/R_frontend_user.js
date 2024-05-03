@@ -10,8 +10,8 @@ router.get("/about",async(req,res)=>{
     res.render("user/about")
 })
 
-router.get("/todo",async(req,res)=>{
-    res.render("user/todo")
+router.get("/viewProduct",async(req,res)=>{
+    res.render("user/viewProducts");
 })
 
 router.get("/userProfile",async(req,res)=>{
@@ -20,6 +20,10 @@ router.get("/userProfile",async(req,res)=>{
 
 router.get("/forgetPassword",async(req,res)=>{
     res.render("user/forgetPassword")
+})
+
+router.get("/test",async(req,res)=>{
+    res.render("user/test")
 })
 
 module.exports = router

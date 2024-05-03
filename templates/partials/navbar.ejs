@@ -1,4 +1,4 @@
-<nav class="navbar navbar-expand-lg navbar" style="background-color: #0e2238">
+<nav class="navbar navbar-expand-sm navbar-dark bg-dark">
   <div class="container-fluid">
     <a class="navbar-brand" href="#"
       ><img
@@ -28,17 +28,18 @@
         <li class="nav-item">
           <a class="nav-link text-light" href="/about">About</a>
         </li>
-        <!-- <li class="nav-item">
-          <a class="nav-link text-light" href="/todo">Todo</a>
-        </li> -->
+        <li class="nav-item">
+          <a class="nav-link text-light" href="/viewProduct">Products</a>
+        </li>
       </ul>
       <div class="d-flex">
-        <!-- <input
-          class="form-control me-2"
-          type="search"
-          placeholder="Search"
-          aria-label="Search"
-        /> -->
+        <button type="button" class="btn btn-light position-relative">
+          <i class="fa fa-shopping-cart" aria-hidden="true"></i>
+          <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+            99+
+          </span>
+        </button>
+        &nbsp;&nbsp;&nbsp;&nbsp;
         <div id="root">
         </div>
       </div>
@@ -120,25 +121,30 @@
 
           const resjson = await resData.json();
           const userdata = resjson.data;
-          
-          const sendData = {
-            name:userdata[0].name,
-            email:userdata[0].email,
-            adminId:userdata[0].adminId,
-            id:userdata[0]._id
-          }
 
-          const template = `
-          <div class="dropdown">
-            <img src='${resjson.data[0].userProfile}' height='40px' width='50px' style='border-radius: 50%;cursor: pointer;' onclick="toggleDropdown()"/>
-            <div id="dropdownMenu" class="dropdown-menu" style="display: none; position: absolute; top: 100%; right: 0;">
-              <a class="dropdown-item" href="/userProfile">View Profile</a>
-              <a class="dropdown-item" href="#" onclick='logout(${JSON.stringify(sendData)})'>Logout</a>
+          if(userdata === undefined){
+            document.getElementById('root').innerHTML = `<button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#loginModel">login</button>`;
+          }else{
+            const sendData = {
+              name:userdata[0].name,
+              email:userdata[0].email,
+              adminId:userdata[0].adminId,
+              id:userdata[0]._id
+            }
+
+            const template = `
+            <div class="dropdown">
+              <img src='${resjson.data[0].userProfile}' height='40px' width='50px' style='border-radius: 50%;cursor: pointer;' onclick="toggleDropdown()"/>
+              <div id="dropdownMenu" class="dropdown-menu" style="display: none; position: absolute; top: 100%; right: 0;">
+                <a class="dropdown-item" href="/userProfile">View Profile</a>
+                <a class="dropdown-item" href="#" onclick='logout(${JSON.stringify(sendData)})'>Logout</a>
+              </div>
             </div>
-          </div>
-          `
+            `
+            document.getElementById('root').innerHTML = template;
+          }
+          
 
-          document.getElementById('root').innerHTML = template;
         } catch (error) {
           console.log("Error to find profile picture : ",error)
         }

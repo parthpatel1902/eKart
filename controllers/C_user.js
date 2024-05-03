@@ -7,7 +7,7 @@ const jwt = require('jsonwebtoken');
 require('dotenv').config();
 const nodemailer = require('nodemailer');
 const userActivity = require('../model/M_useractivity');
-const XLSX = require('xlsx')
+const XLSX = require('xlsx');
 const path = require('path');
 
 const addActivity = async(req,res)=>{
@@ -113,7 +113,7 @@ const userLogin = async(req,res) =>{
   const reslogin = await user.findOne({email:email,password:password})
 
   if(reslogin){
-    const token = await jwt.sign({ id: reslogin._id.toString() },process.env.SECRETKEY, { expiresIn: "10 hours" });
+    const token = await jwt.sign({ id: reslogin._id.toString() },process.env.SECRETKEY, { expiresIn: "10 days" });
     return res.json({available:true,message:"User not available",token:token})
   }else{
     return res.json({available:false,message:"User available"})

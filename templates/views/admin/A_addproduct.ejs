@@ -1,0 +1,501 @@
+<html>
+  <%- include('../../partials/admin_navbar.ejs') %>
+
+  <!-- Model  for add category  -->
+  <div class="modal fade" id="addCategory" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="exampleModalLabel">Add Category</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+            <div class="mb-3">
+                <label for="Name" class="form-label">Category name</label>
+                <input type="text" class="form-control" id="categoryname" onchange="validateName()" onkeypress="validateName()" placeholder="Enter category  name">
+                <div id="nameError" class="text-danger"></div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            <button class="btn btn-primary" id="sent" onclick="addCategory(event)">Add</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- End of add category Model -->
+
+  <!-- Model  for view category  -->
+  <div class="modal fade" id="viewCategory" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="exampleModalLabel">Add Category</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+          <div class="modal-body">
+            <div id="displayCategory">
+
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- End of view category Model -->
+
+  <!-- model for the display product -->
+
+  <div class="modal fade" id="addproduct" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="exampleModalLabel">Add Product</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label for="productName" class="form-label">Product Name</label>
+            <input type="text" class="form-control" id="productName" name="productName" required>
+            <div id="productNameFeedback" class="invalid-feedback"></div>
+          </div>
+          <div class="mb-3">
+            <label for="categoryName" class="form-label">Select Category Name</label>
+            <select class="form-control" id="selectCategory">
+
+            </select>
+          </div>
+          <div class="mb-3">
+            <label for="price" class="form-label">Price</label>
+            <input type="number" class="form-control" id="price" name="price" required>
+            <div id="priceFeedback" class="invalid-feedback"></div>
+          </div>
+          <div class="mb-3">
+            <label for="quantity" class="form-label">Quantity</label>
+            <input type="number" class="form-control" id="quantity" name="quantity" required>
+            <div id="quantityFeedback" class="invalid-feedback"></div>
+          </div>
+          <div class="mb-3">
+            <label for="discount" class="form-label">Discount</label>
+            <input type="number" class="form-control" id="discount" name="discount">
+            <div id="discountFeedback" class="invalid-feedback"></div>
+          </div>
+          <div class="mb-3">
+            <label for="product_picture" class="form-label">Product Picture</label>
+            <input type="file" class="form-control" id="product_picture" name="product_picture">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          <button class="btn btn-primary" onclick="addProduct(event)">Add product</button>
+      </div>
+    </div>
+  </div>
+  </div>
+
+  <!-- end model of display product -->
+
+  <main id="main" class="main">
+
+    <div class="pagetitle">
+      <h1>Add Product</h1>
+    </div><!-- End Page Title -->
+
+    <section class="section dashboard">
+      <div class="row">
+        <div class="col-md-12">
+            <button class='btn text-light float-start' style="background-color:#0e2238;" data-bs-toggle="modal" data-bs-target="#addCategory">+ Add Category</button>
+            <button class='ms-2 btn text-light float-start' style="background-color:#066e31;" data-bs-toggle="modal" data-bs-target="#viewCategory"><i class="bi bi-eye-fill"></i> View Category</button>
+            <button class='btn text-light float-end' style="background-color:#0e2238;" data-bs-toggle="modal" data-bs-target="#addproduct">+ Add Product</button> 
+        </div>
+        <div class="col-md-12" id="root">
+
+        </div>
+        <script>
+            getProducts();
+            async function getProducts(){
+              const resProduct = await fetch("/getproduct",{
+                method: 'GET', // or 'POST', 'PUT', etc. depending on your endpoint
+                headers: {
+                  'Authorization': `Bearer ${localStorage.getItem('token')}`
+                }
+              })
+
+              const products = await resProduct.json();
+
+              let html = `<table class='table mt-5'><thead><th>No.</th><th>Product Name</th><th>Category Name</th><th>Price</th><th>Quantity</th><th>Discount</th><th>Picture</th><th>Edit</th><th>Delete</th></thead><tbody>`;
+
+              let no = 1;
+              
+              products.data.map((item)=>{
+                  html += `<tr>
+                    <td>${no++}</td>
+                    <td>${item.productName}</td>
+                    <td>${item.categoryName}</td>
+                    <td>${item.price}</td>
+                    <td>${item.quantity}</td>
+                    <td>${item.discount}</td>
+                    <td><img src='${item.product_picture}' height='50px' width='50px'/></td>
+                    <td class=''>
+                    <button class='btn btn-dark'><i class="bi bi-pencil-square"></i></button>
+                    </td>
+                    <td class=''>
+                    <button class='btn btn-dark'><i class="bi bi-trash3-fill"></i></button>
+                    </td>
+                    </tr>`;
+              })
+
+              html += `</tbody></thead></table>`;
+
+              document.getElementById('root').innerHTML = html;
+            }
+        </script>
+      </div>
+    </section>
+
+  </main><!-- End #main -->
+  <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
+
+  <!-- Vendor JS Files -->
+  <script src="assets/vendor/apexcharts/apexcharts.min.js"></script>
+  <script src="assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <script src="assets/vendor/chart.js/chart.umd.js"></script>
+  <script src="assets/vendor/echarts/echarts.min.js"></script>
+  <script src="assets/vendor/quill/quill.min.js"></script>
+  <script src="assets/vendor/simple-datatables/simple-datatables.js"></script>
+  <script src="assets/vendor/tinymce/tinymce.min.js"></script>
+  <script src="assets/vendor/php-email-form/validate.js"></script>
+
+  <!-- Template Main JS File -->
+  <script src="assets/js/main.js"></script>
+
+  <script>
+
+    // add product 
+
+    async function addProduct(event){
+      event.preventDefault();
+
+      const productName = document.getElementById("productName").value;
+      const categoryName = document.getElementById("selectCategory").value;
+      const price = document.getElementById('price').value;
+      const quantity = document.getElementById('quantity').value;
+      const discount = document.getElementById('discount').value;
+      const file = document.getElementById('product_picture');
+      const product_picture = file.files[0];
+
+      const formData = new FormData();
+      formData.append('productName',productName);
+      formData.append('categoryName',categoryName);
+      formData.append('price',price);
+      formData.append('quantity',quantity);
+      formData.append('discount',discount);
+      formData.append('product_picture',product_picture);
+
+
+      const resOfAddProduct = await fetch('/addproduct',{
+        method:'POST',
+        body:formData
+      })
+
+      const resOfAddProductData = await resOfAddProduct.json();
+
+      if(resOfAddProductData.success){
+        return Swal.fire({
+          icon: 'success',
+          title: 'Product Added Successfully',
+          showConfirmButton: true,
+        }).then(()=>{
+          location.reload();
+        })
+      }
+
+    }
+
+
+    // category functions
+
+    displayCategory();
+
+    async function displayCategory(){
+        const categoryRes = await fetch("/getcategory",{
+          method:"GET"
+        })
+
+        const categoryList = await categoryRes.json();
+        
+        const categoryData = categoryList.data;
+        
+        let categoryHTML = `<table class='table'><thead><th>No</th><th>Category Name</th><th>Update</th><th>Delete</th></thead><tbody>`;
+        let categoryNo = 1;
+
+        let selectCategory = ``
+
+        categoryData.map((item)=>{
+
+          selectCategory += `<option value='${item.categoryName}'>${item.categoryName}</option>`;
+
+          let updateCatgoryData = {
+            id:item._id,
+            categoryNo:categoryNo,
+            categoryName:item.categoryName
+          }
+
+          categoryHTML += `<tr><td>${categoryNo}</td><td id='category${categoryNo}'>${item.categoryName}</td><td id='cateButton${categoryNo}' class='text-center'><i class="bi bi-pencil-square" onclick='updateCatgory(${JSON.stringify(updateCatgoryData)})'></i></td><td class='text-center' onclick='handleRemoveCategory(${JSON.stringify(item._id)})'><i class="bi bi-trash-fill"></i></td></tr>`;
+          categoryNo++;
+        })
+
+        document.getElementById('selectCategory').innerHTML = selectCategory;
+
+        categoryHTML += `</tbody></table>`;
+
+        document.getElementById('displayCategory').innerHTML = categoryHTML;
+
+    }
+
+    function updateCatgory(item){
+        
+       const categoryNo =  item.categoryNo;
+       const categoryName = item.categoryName;
+
+      document.getElementById(`category${categoryNo}`).innerHTML = `<input type='text'  class='form-control' id='editCategory' value='${categoryName}'/><div id="nameError" class="text-danger"></div>`;
+
+      document.getElementById(`cateButton${categoryNo}`).innerHTML = `<button class='btn btn-success' onclick='handleEditCategory(${JSON.stringify(item)})'><i class="bi bi-file-check-fill"></i></button>&nbsp;&nbsp;<button class='btn btn-warning' onclick='cancelEditCategory(${JSON.stringify(item)})'><i class="bi bi-file-excel"></i></button>`
+    }
+
+    function cancelEditCategory(item){
+      document.getElementById(`cateButton${item.categoryNo}`).innerHTML = `<i class="bi bi-pencil-square" onclick='updateCatgory(${JSON.stringify(item)})'></i>`;
+      document.getElementById(`category${item.categoryNo}`).innerHTML = item.categoryName;
+    }
+
+    async function handleEditCategory(item){
+      const categoryNo = item.categoryNo;
+      const categoryName = document.getElementById(`editCategory`).value;
+      const id = item.id;
+
+      const formData = new FormData();
+      formData.append("categoryName",categoryName);
+      formData.append("id",id);
+
+      const resUpdateCategory = await fetch("/editcategory",{
+        method:"POST",
+        body:formData
+      })
+
+      const editCategory = await resUpdateCategory.json();
+
+      if(editCategory.success){
+        displayCategory();
+      }
+
+    }
+
+    async function handleRemoveCategory(id){
+      Swal.fire({
+        title: "Are you sure?",
+        text: "You won't be able to revert this!",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#3085d6",
+        cancelButtonColor: "#d33",
+        confirmButtonText: "Yes, delete it!"
+      }).then(async (result) => {
+        if (result.isConfirmed) {
+          const resDeleteCategory = await fetch(`/removecategory?id=${id}`,{
+            method:"GET"
+          })
+
+          const resJsonRemoveCategory = await resDeleteCategory.json();
+
+          if(resJsonRemoveCategory.success){
+            displayCategory();
+          }
+        }
+      });
+    }
+
+    function validateName() {
+        const name = document.getElementById("categoryname").value;
+        const nameError = document.getElementById("nameError");
+
+        if (name === "") {
+          nameError.innerHTML = "Name is Required.";
+          document.getElementById('categoryname').style.border = "2px solid red";
+        } else if (name.length < 2 || !/^[a-zA-Z\s]+$/.test(name)) {
+          nameError.textContent =
+            "Name must be at least 3 characters long and contain only letters.";
+            document.getElementById("categoryname").style.border = "2px solid red";
+        } else {
+          nameError.textContent = "";
+          document.getElementById("categoryname").style.border = "";
+        }
+    }
+      
+    async function addCategory(event){
+      event.preventDefault();
+      const name = document.getElementById('categoryname').value;
+      if(!name){
+        return Swal.fire({
+          icon:"error",
+          text:"Please enter category name"
+        })
+      }
+
+      const formData = new FormData();
+      formData.append("categoryName",name);
+
+      const resOfAddCategory = await fetch("/addcategory",{
+          method:"POST",
+          body:formData
+      })
+
+      const AddCategoryJsonRespone = await resOfAddCategory.json();
+
+      if(!AddCategoryJsonRespone.success){
+        return Swal.fire({
+          icon:"error",
+          text:AddCategoryJsonRespone.message
+        })
+      }else{
+        return Swal.fire({
+          icon:"success",
+          text:"Category is added successfully."
+        }).then(()=>{
+          location.reload();
+        })
+      }
+
+    }
+  
+    // End of the category function
+
+
+    // start the validation for add product 
+    // ---------------------------------------------------------------
+
+  //   document.addEventListener("DOMContentLoaded", function () {
+  //   const productNameInput = document.getElementById("productName");
+  //   const categoryNameInput = document.getElementById("categoryName");
+  //   const priceInput = document.getElementById("price");
+  //   const quantityInput = document.getElementById("quantity");
+  //   const discountInput = document.getElementById("discount");
+
+  //   productNameInput.addEventListener("keypress", function () {
+  //     validateProductName();
+  //   });
+
+  //   categoryNameInput.addEventListener("blur", function () {
+  //     validateCategoryName();
+  //   });
+
+  //   priceInput.addEventListener("blur", function () {
+  //     validatePrice();
+  //   });
+
+  //   quantityInput.addEventListener("blur", function () {
+  //     validateQuantity();
+  //   });
+
+  //   discountInput.addEventListener("blur", function () {
+  //     validateDiscount();
+  //   });
+
+  //   function validateProductName() {
+  //     const productNameValue = productNameInput.value.trim();
+  //     if (!productNameValue) {
+  //       productNameInput.classList.add("is-invalid");
+  //       document.getElementById("productNameFeedback").textContent = "Product name is required.";
+  //     } else if (/[^a-zA-Z0-9 ]/.test(productNameValue)) {
+  //       productNameInput.classList.add("is-invalid");
+  //       document.getElementById("productNameFeedback").textContent = "Product name should only contain letters, numbers, or spaces.";
+  //     } else {
+  //       productNameInput.classList.remove("is-invalid");
+  //       productNameInput.classList.add("is-valid");
+  //       document.getElementById("productNameFeedback").textContent = "";
+  //     }
+  //   }
+
+  //   function validateCategoryName() {
+  //     const categoryNameValue = categoryNameInput.value.trim();
+  //     if (!categoryNameValue) {
+  //       categoryNameInput.classList.add("is-invalid");
+  //       document.getElementById("categoryNameFeedback").textContent = "Category name is required.";
+  //     } else if (/[^a-zA-Z0-9 ]/.test(categoryNameValue)) {
+  //       categoryNameInput.classList.add("is-invalid");
+  //       document.getElementById("categoryNameFeedback").textContent = "Category name should only contain letters, numbers, or spaces.";
+  //     } else {
+  //       categoryNameInput.classList.remove("is-invalid");
+  //       categoryNameInput.classList.add("is-valid");
+  //       document.getElementById("categoryNameFeedback").textContent = "";
+  //     }
+  //   }
+
+  //   function validatePrice() {
+  //     const priceValue = parseFloat(priceInput.value);
+  //     if (isNaN(priceValue) || priceValue < 0) {
+  //       priceInput.classList.add("is-invalid");
+  //       document.getElementById("priceFeedback").textContent = "Price should be a non-negative number.";
+  //     } else {
+  //       priceInput.classList.remove("is-invalid");
+  //       priceInput.classList.add("is-valid");
+  //       document.getElementById("priceFeedback").textContent = "";
+  //     }
+  //   }
+
+  //   function validateQuantity() {
+  //     const quantityValue = parseInt(quantityInput.value);
+  //     if (isNaN(quantityValue) || quantityValue < 0) {
+  //       quantityInput.classList.add("is-invalid");
+  //       document.getElementById("quantityFeedback").textContent = "Quantity should be a non-negative integer.";
+  //     } else {
+  //       quantityInput.classList.remove("is-invalid");
+  //       quantityInput.classList.add("is-valid");
+  //       document.getElementById("quantityFeedback").textContent = "";
+  //     }
+  //   }
+
+  //   function validateDiscount() {
+  //     const discountValue = parseFloat(discountInput.value);
+  //     if (isNaN(discountValue) || discountValue < 0) {
+  //       discountInput.classList.add("is-invalid");
+  //       document.getElementById("discountFeedback").textContent = "Discount should be a non-negative number.";
+  //     } else {
+  //       discountInput.classList.remove("is-invalid");
+  //       discountInput.classList.add("is-valid");
+  //       document.getElementById("discountFeedback").textContent = "";
+  //     }
+  //   }
+
+  //   document.getElementById("productForm").addEventListener("submit", function (event) {
+  //     event.preventDefault();
+  //     validateProductName();
+  //     validateCategoryName();
+  //     validatePrice();
+  //     validateQuantity();
+  //     validateDiscount();
+
+  //     // If all inputs are valid, you can proceed with form submission
+  //     if (!productNameInput.classList.contains("is-invalid") &&
+  //       !categoryNameInput.classList.contains("is-invalid") &&
+  //       !priceInput.classList.contains("is-invalid") &&
+  //       !quantityInput.classList.contains("is-invalid") &&
+  //       !discountInput.classList.contains("is-invalid")) {
+  //       // Perform form submission here
+  //       console.log("Form submitted successfully!");
+  //     } else {
+  //       console.log("Form validation failed. Please check the fields.");
+  //     }
+  //   });
+  // });
+   
+  // end the add product validation
+  
+  </script>
+
+
+</body>
+</html>

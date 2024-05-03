@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Display</title>
+    <%- include('../../partials/link.ejs') %>
+    <style>
+        /* Styles for the loader */
+        #loader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+        #loader img {
+            width: 100px; /* Adjust the size as needed */
+            height: 100px; /* Adjust the size as needed */
+        }
+        body{
+            font-family: 'Times New Roman', Times, serif;
+        }
+    </style>
+</head>
+<body>
+    <div id="loader">
+        <img src="Spinner.gif" alt="Loading...">
+    </div>
+    <%- include('../../partials/navbar.ejs') %>
+
+<div class="container mt-5">
+  <div id="productCards" class="row"></div>
+  <nav aria-label="Page navigation">
+    <ul id="pagination" class="pagination"></ul>
+  </nav>
+</div>
+
+<script>
+  //===============//===============//===============//===============//
+  
+  window.addEventListener('load', function() {
+    setTimeout(function() {
+        document.getElementById('loader').style.display = 'none';
+    }, 1000);
+  });
+
+  //===============//===============//===============//===============//
+
+  async function fetchProducts() {
+    try {
+
+        const token = localStorage.getItem('token');
+
+        const response = await fetch('/getproduct', {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+            });
+        const data = await response.json();
+        return data;
+    } catch (error) {
+      console.error('Error fetching products:', error);
+      return [];
+    }
+  }
+
+  // Function to display products using Bootstrap cards
+  function displayProducts(products) {
+    const productCards = document.getElementById('productCards');
+    productCards.innerHTML = '';
+
+    products.forEach(product => {
+      const card = `
+        <div class="col-md-3 mb-4">
+          <div class="card shadow-lg">
+            <img src="${product.product_picture}" class="card-img-top" alt="${product.productName}" height="200px" width="169px">
+            <div class="card-body">
+                <h5 class="card-title border border-light bg-light text-center">${product.productName}</h5>
+                <p class="card-text">Discount: ${product.discount}%</p>
+                <p class="card-text"><b>Price:</b> <del>${product.price}</del>&nbsp;&nbsp;<ins>${product.price - (product.price * product.discount)/100}/-</ins></p>
+                <p class="card-text">Available Quantity: <span class='text-danger'>${product.quantity}</span></p>
+                <div class="d-grid gap-2">
+                    <button class="btn btn-outline-success" type="button">Add to cart</button>
+                    <button class="btn btn-primary" type="button">Buy Now</button>
+                </div>
+            </div>
+          </div>
+        </div>
+      `;
+      productCards.innerHTML += card;
+    });
+  }
+
+  // Function to handle pagination
+  function handlePagination(products, currentPage = 1, itemsPerPage = 8) {
+    const paginationElement = document.getElementById('pagination');
+    paginationElement.innerHTML = '';
+
+    const totalPages = Math.ceil(products.length / itemsPerPage);
+
+    for (let i = 1; i <= totalPages; i++) {
+      const li = document.createElement('li');
+      li.classList.add('page-item');
+      const link = document.createElement('a');
+      link.classList.add('page-link');
+      link.href = '#';
+      link.textContent = i;
+      if (i === currentPage) {
+        li.classList.add('active');
+      }
+      link.addEventListener('click', () => {
+        handlePagination(products, i);
+      });
+      li.appendChild(link);
+      paginationElement.appendChild(li);
+    }
+
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = Math.min(startIndex + itemsPerPage, products.length);
+    const displayedProducts = products.slice(startIndex, endIndex);
+    displayProducts(displayedProducts);
+  }
+
+  // Initial function to fetch and display products
+  async function init() {
+    const products = await fetchProducts();
+    handlePagination(products.data);
+  }
+
+  init();
+</script>
+
+</body>
+</html>

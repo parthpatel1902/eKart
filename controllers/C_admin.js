@@ -442,23 +442,27 @@ const deleteUser = async(req,res)=>{
 }
 
 const updateUser = async(req,res)=>{
-    const id = req.params.id;
+    try {
+        const id = req.params.id;
 
-    const {email,password,name} = req.body; 
+        const {email,password,name} = req.body; 
 
-    sendEmailPassword(email,password,name);
+        sendEmailPassword(email,password,name);
 
-    if(req.file){
-        const photoName = await user.findOne({_id:id},{_id:0,userProfile:1})
-        const PathDelete = path.join(__dirname,`../uploads/${photoName.userProfile}`);
-        fs.unlinkSync(PathDelete);
-        const updateStudents = await user.findByIdAndUpdate({ _id: id }, {...req.body,userProfile:req.file.filename}, { new: true });
+        if(req.file){
+            const photoName = await user.findOne({_id:id},{_id:0,userProfile:1})
+            const PathDelete = path.join(__dirname,`../uploads/${photoName.userProfile}`);
+            fs.unlinkSync(PathDelete);
+            const updateStudents = await user.findByIdAndUpdate({ _id: id }, {...req.body,userProfile:req.file.filename}, { new: true });
 
-        return res.json({success:true});
+            return res.json({success:true});
 
-    }else{
-        const updateStudents = await user.findByIdAndUpdate({ _id: id }, req.body, { new: true });
-        return res.json({success:true});
+        }else{
+            const updateStudents = await user.findByIdAndUpdate({ _id: id }, req.body, { new: true });
+            return res.json({success:true});
+        }
+    } catch (error) {
+        console.log("Error from the updateUser : ",error);
     }
 
 }

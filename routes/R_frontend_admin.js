@@ -50,6 +50,15 @@ router.get('/notification', (req, res) => {
     })
 })
 
+router.get('/addproduct', (req, res) => {
+    if(req.session.token == undefined){
+        return res.redirect("/adminLogin");
+    }
+    res.render('admin/A_addproduct',{
+        token:req.session.token
+    })
+})
+
 router.get("/A_logout",(req,res)=>{
     res.render('admin/A_logout');
 })
