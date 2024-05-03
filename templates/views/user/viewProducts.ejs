@@ -26,9 +26,17 @@
         body{
             font-family: 'Times New Roman', Times, serif;
         }
+        .custom-toast {
+          background-color: #4CAF50;
+          color: white;
+          padding: 16px;
+          border-radius: 8px;
+          box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.2);
+          margin-top: 50px;
+        }
     </style>
 </head>
-<body>
+<body style="margin-top: 100px;">
     <div id="loader">
         <img src="Spinner.gif" alt="Loading...">
     </div>
@@ -47,7 +55,7 @@
   window.addEventListener('load', function() {
     setTimeout(function() {
         document.getElementById('loader').style.display = 'none';
-    }, 1000);
+    }, 2000);
   });
 
   //===============//===============//===============//===============//
@@ -73,12 +81,32 @@
   }
 
   // Function to display products using Bootstrap cards
-  function displayProducts(products) {
+  async function displayProducts(products) {
     const productCards = document.getElementById('productCards');
     productCards.innerHTML = '';
 
+    const token = localStorage.getItem('token');
+
+    const resProductCheck = await fetch("/getcartitem",{
+      method:"GET",
+      headers:{
+        "Content-Type":"application/json",
+        "Authorization":`Bearer ${token}`
+      }
+    })
+
+    const resProductCheckJSON = await resProductCheck.json();
+
+    const ProductsID = [];
+
+    resProductCheckJSON.data.map((item)=>{
+      ProductsID.push(item.productId);
+    })
+
+    let cartId;
+
     products.forEach(product => {
-      const card = `
+      let card = `
         <div class="col-md-3 mb-4">
           <div class="card shadow-lg">
             <img src="${product.product_picture}" class="card-img-top" alt="${product.productName}" height="200px" width="169px">
@@ -88,8 +116,30 @@
                 <p class="card-text"><b>Price:</b> <del>${product.price}</del>&nbsp;&nbsp;<ins>${product.price - (product.price * product.discount)/100}/-</ins></p>
                 <p class="card-text">Available Quantity: <span class='text-danger'>${product.quantity}</span></p>
                 <div class="d-grid gap-2">
-                    <button class="btn btn-outline-success" type="button">Add to cart</button>
-                    <button class="btn btn-primary" type="button">Buy Now</button>
+                `;
+
+                    if(ProductsID.includes(product._id)){
+
+                      resProductCheckJSON.data.map((item)=>{
+                        if(item.productId === product._id){
+                          cartId = item._id;
+                        }
+                      })
+
+                      card += `
+                      <div id='${product._id}'>
+                      <button onclick='removeToCart(${JSON.stringify({buttonId:product._id,cartId:cartId,item:product})})' class='btn btn-warning' style='width:100%'>Remove from cart</button>
+                      </div>`;
+                    }else{
+                      card +=
+                      `<div id='${product._id}'>
+                        <button class="btn btn-outline-success" style='width:100%' onclick='addToCart(${JSON.stringify(product)})' type="button">Add to cart</button>
+                      </div>
+                      `
+                    }
+                   card += `<div>
+                      <button class="btn btn-primary mt-2" style='width:100%' type="button">Buy Now</button>
+                    </div>
                 </div>
             </div>
           </div>
@@ -99,7 +149,82 @@
     });
   }
 
+  async function addToCart(item){
+    const formData = new FormData();
+    formData.append('productName',item.productName);
+    formData.append('categoryName',item.categoryName);
+    formData.append('price',item.price - (item.price * item.discount)/100);
+    formData.append('quantity',1);
+    formData.append('subtotal',item.price - (item.price * item.discount)/100);
+    formData.append('product_picture',item.product_picture);
+    formData.append('productId',item._id);
+
+    const token = localStorage.getItem('token');
+
+    const response = await fetch('/addcart', {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${token}`
+        },
+        body:formData
+    });
+
+    if (!response.ok) {
+        throw new Error('Network response was not ok');
+    }
+    const data = await response.json();
+
+    if(data.success){
+      $("#numberCart").text(data.numberCart);
+      $(`#${item._id}`).html('');
+      const cartId = data.cartId;
+      $(`#${item._id}`).html(`<button onclick='removeToCart(${JSON.stringify({buttonId:item._id,cartId:cartId,item:item})})' class='btn btn-warning' style='width:100%'>Remove from cart</button>`);
+      
+      Toastify({
+        text: `${item.productName} added to cart!`,
+        duration: 2000,
+        gravity: "top",
+        position: 'right',
+        className: "custom-toast",
+        stopOnFocus: true
+      }).showToast();
+    }
+  }
+
+  async function removeToCart(item){
+
+    const token = localStorage.getItem('token');
+
+    const resRemoveCart = await fetch(`/removecart?cartId=${item.cartId}`,{
+      method:'DELETE',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      },
+    })
+
+    const resRemoveCartJson = await resRemoveCart.json();
+
+    if(resRemoveCartJson.success){
+      
+      $("#numberCart").text(resRemoveCartJson.numberCart);
+
+      Toastify({
+        text: `${item.item.productName} removed from cart!`,
+        duration: 2000,
+        gravity: "top",
+        position: 'right',
+        className: "custom-toast",
+        stopOnFocus: true
+      }).showToast();
+
+      $(`#${item.buttonId}`).html('');
+      $(`#${item.buttonId}`).html(`<button class="btn btn-outline-success" style='width:100%' onclick='addToCart(${JSON.stringify(item.item)})' type="button">Add to cart</button>`);
+    }
+
+  }
+
   // Function to handle pagination
+  
   function handlePagination(products, currentPage = 1, itemsPerPage = 8) {
     const paginationElement = document.getElementById('pagination');
     paginationElement.innerHTML = '';

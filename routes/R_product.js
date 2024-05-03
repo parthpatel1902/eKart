@@ -15,5 +15,8 @@ router.get("/getproduct",auth.tokenCheck,productController.getproduct);
 
 // order mangement
 router.post("/addcart",auth.tokenCheck,multipartMiddleware,productController.addCart);
+router.delete("/removecart",auth.tokenCheck,productController.removeCart);
+router.get("/numberOfcart",auth.tokenCheck,productController.numberOfCart);
+router.get("/getcartitem",auth.tokenCheck,productController.getCartItem);
 
 module.exports = router;

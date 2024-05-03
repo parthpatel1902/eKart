@@ -26,4 +26,8 @@ router.get("/test",async(req,res)=>{
     res.render("user/test")
 })
 
+router.get("/viewcart",async(req,res)=>{
+    res.render("user/viewCart");
+})
+
 module.exports = router

@@ -92,7 +92,7 @@ const upload = multer({ storage: storage });
 
 const addproduct = async(req,res)=>{
     try {
-        const {productName,categoryName,price,quantity,color,discount,product_picture} = req.body;
+        const {productName,categoryName,price,quantity,discount} = req.body;
 
         const insert_data = {
             productName:productName,
@@ -131,7 +131,7 @@ const getproduct = async(req,res)=>{
 
 const addCart = async(req,res)=>{
     try {
-        const {productName,categoryName,price,quantity,subtotal,product_picture} = req.body;
+        const {productName,categoryName,price,quantity,subtotal,product_picture,productId} = req.body;
 
         const insert_data = {
             userId:req.user.id,
@@ -140,14 +140,18 @@ const addCart = async(req,res)=>{
             price:price,
             quantity:quantity,
             subtotal:subtotal,
-            product_picture:product_picture
+            product_picture:product_picture,
+            productId:productId
         }
 
         const res_add = new cart(insert_data);
 
         res_add.save()
         .then(async(result) => {
-            return res.json({success:true});
+
+            const totalcart = await cart.find({userId:req.user.id}).count();
+
+            return res.json({success:true,cartId:res_add._id,numberCart:totalcart});
         })
         .catch((error) => {
             console.log("Error >>>>> ", error.message);
@@ -161,7 +165,58 @@ const addCart = async(req,res)=>{
 
 }
 
+const removeCart = async(req,res)=>{
+    const cartId = req.query.cartId;
+    try {
+        const removecartRes = await cart.findByIdAndDelete({_id:cartId})
+
+        if(removeCart){
+            const totalcart = await cart.find({userId:req.user.id}).count();
+            return res.json({success:true,numberCart:totalcart});
+        }
+
+    } catch (error) {
+        console.log("error from the removeCart function : ",error);
+    }
+}
+
+const numberOfCart = async(req,res)=>{
+    const userId = req.user.id;
+    try {
+        const totalcart = await cart.find({userId:userId}).count();
+
+        if(totalcart){
+            return res.json({success:true,numberCart:totalcart})
+        }
+
+    } catch (error) {
+        console.log("error from the numberOfeCart function : ",error);
+    }
+}
+
+const getCartItem = async(req,res)=>{
+    const userId = req.user.id;
+    try {
+        const totalcart = await cart.find({userId:userId});
+
+        if(totalcart){
+            return res.json({success:true,data:totalcart});
+        }
+
+    } catch (error) {
+        console.log("error from the getCart function : ",error);
+    }
+}
 
 module.exports = {
-    addCategory,getCategory,editCategory,removeCategory,addproduct,upload,getproduct,addCart
+    addCategory,
+    getCategory,
+    editCategory,
+    removeCategory,
+    addproduct,upload,
+    getproduct,
+    addCart,
+    removeCart,
+    numberOfCart,
+    getCartItem
 }

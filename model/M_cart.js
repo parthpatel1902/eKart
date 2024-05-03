@@ -21,6 +21,9 @@ const cartSchema = new mongoose.Schema({
     },
     product_picture:{
         type:String
+    },
+    productId:{
+        type:mongoose.Schema.ObjectId
     }
 })
 
