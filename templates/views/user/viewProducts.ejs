@@ -113,7 +113,7 @@
             <div class="card-body">
                 <h5 class="card-title border border-light bg-light text-center">${product.productName}</h5>
                 <p class="card-text">Discount: ${product.discount}%</p>
-                <p class="card-text"><b>Price:</b> <del>${product.price}</del>&nbsp;&nbsp;<ins>${product.price - (product.price * product.discount)/100}/-</ins></p>
+                <p class="card-text"><b>Effective Price:</b> <del>${product.price}</del>&nbsp;&nbsp;<ins>${product.price - (product.price * product.discount)/100}/-</ins></p>
                 <p class="card-text">Available Quantity: <span class='text-danger'>${product.quantity}</span></p>
                 <div class="d-grid gap-2">
                 `;

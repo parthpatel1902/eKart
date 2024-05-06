@@ -22,12 +22,12 @@ router.get("/forgetPassword",async(req,res)=>{
     res.render("user/forgetPassword")
 })
 
-router.get("/test",async(req,res)=>{
-    res.render("user/test")
-})
-
 router.get("/viewcart",async(req,res)=>{
     res.render("user/viewCart");
+})
+
+router.get("/order",async(req,res)=>{
+    res.render("user/placeorder");
 })
 
 module.exports = router

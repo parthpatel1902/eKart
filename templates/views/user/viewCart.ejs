@@ -30,6 +30,14 @@
         .jumbotron {
         background-color: #f8f9fa;
         }
+        .custom-toast {
+          background-color: #4CAF50;
+          color: white;
+          padding: 16px;
+          border-radius: 8px;
+          box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.2);
+          margin-top: 50px;
+        }
     </style>
 </head>
 <body style="margin-top: 100px;">
@@ -40,8 +48,13 @@
     <div>
         <div class="container mt-4">
             <div id="cart-items"></div>
-            <div class="mt-4">
-              <h4>Total: <span id="total-price">0</span></h4>
+            <div id="cartFooter">
+                <div class="mt-4 d-flex justify-content-end" id="displayTotal">
+                    <h4 class="border p-1 bg-success text-light rounded shadow text-center" style="text-align: center;width: 200px;">Total: <span id="total-price">0</span></h4>
+                </div>
+                <div class="mt-2 d-flex justify-content-end" id="placeyourorder">
+                    <button class="btn btn-primary" onclick="location.href=''">Place your order</button>
+                </div>
             </div>
         </div>
     </div>
@@ -71,6 +84,13 @@
 
         const resProductCheckJSON = await resProductCheck.json();
 
+        if(resProductCheckJSON.data.length === 0){
+            $("#cartFooter").html(`<h1 class='text-center'>Looks like your <img src='cart.png' height='50px' width='50px'/> cart is as light as a feather! Start adding items to make it brim with excitement and possibilities</h1>
+            <center><button class='btn btn-primary' onclick="location.href='/viewProduct'">View products</button></center>
+            `)
+            return;
+        }
+
         cartItems = resProductCheckJSON.data;
 
         var cartHtml = '';
@@ -78,22 +98,23 @@
         cartItems.forEach(function(item) {
             total += Number(item.subtotal);
             cartHtml += `
-            <div class="card mb-3">
+            <div class="card mb-3 shadow" id='${item._id}'>
                 <div class="row no-gutters">
                 <div class="col-md-4">
-                    <img src="${item.product_picture}" class="card-img" alt="${item.productName}">
+                    <img src="${item.product_picture}" class="card-img" alt="${item.productName}" height="280px"/>
                 </div>
                 <div class="col-md-8">
                     <div class="card-body">
-                    <h5 class="card-title">${item.productName}</h5>
+                    <h3 class="card-title text-center border bg-light shadow-sm">${item.productName}</h3>
                     <p class="card-text">Category: ${item.categoryName}</p>
-                    <p class="card-text">Price: ₹${item.price}</p>
+                    <p class="card-text">Price: <spna class='border p-1 rounded shadow-sm'>₹${item.price}</spna></p>
                     <p class="card-text">Quantity: 
-                        <button class="btn btn-sm btn-primary" onclick="updateQuantity('${item._id}', 'minus')">-</button>
+                        <button class="btn btn-sm btn-primary" onclick="updateQuantity('${item._id}', 'minus',${item.price})">-</button>
                         <span id="quantity-${item._id}">${item.quantity}</span>
-                        <button class="btn btn-sm btn-primary" onclick="updateQuantity('${item._id}', 'plus')">+</button>
+                        <button class="btn btn-sm btn-primary" onclick="updateQuantity('${item._id}', 'plus',${item.price})">+</button>
                     </p>
-                    <p class="card-text">Subtotal: ₹<span id="subtotal-${item._id}">${item.subtotal}</span></p>
+                    <p class="card-text"><strong> Subtotal: </strong>₹<span id="subtotal-${item._id}" class='text-primary text-3'>${item.subtotal}</span></p>
+                    <button class='btn btn-danger' onclick="removeItem('${item._id}','${item.productName}')">Remove Item</button>
                     </div>
                 </div>
                 </div>
@@ -104,22 +125,118 @@
         $('#total-price').text(total);
     }
 
-    function updateQuantity(itemId, action) {
+    async function updateQuantity(itemId, action,price) {
        
         if(action === 'plus'){
-            var quantity = Number($('#quantity-' + itemId).text()) + 1;
-            $('#quantity-' + itemId).text(quantity);
+            let quantity = Number($('#quantity-' + itemId).text()) + 1;
+
+            const formData = new FormData();
+            formData.append('id', itemId);
+            formData.append('quantity', quantity);
+            formData.append('subtotal',(price*quantity).toFixed(2));
+
+            const resEditCart = await fetch("/editcart",{
+                method:"PATCH",
+                body:formData
+            });
+
+            const resEditCartJSON = await resEditCart.json();
+
+            if(resEditCartJSON.success){
+                $('#quantity-' + itemId).text(quantity);
+                $(`#subtotal-${itemId}`).text((price*quantity).toFixed(2));
+                const totalPrice = $(`#total-price`).text();
+                $(`#total-price`).text((Number(totalPrice) + Number(price)).toFixed(2));
+            }            
         }
         else if(action === 'minus'){
-            var quantity = Number($('#quantity-' + itemId).text()) - 1;
+            let quantity = Number($('#quantity-' + itemId).text()) - 1;
             if(quantity === 0){
                 return;
             }
-            $('#quantity-' + itemId).text(quantity);
-        }
-      
 
-      
+            const subtotal = $(`#subtotal-${itemId}`).text();
+            // update cart in Db
+            const formData = new FormData();
+            formData.append('id', itemId);
+            formData.append('quantity', quantity);
+            formData.append('subtotal',(subtotal - price).toFixed(2));
+
+            const resEditCart = await fetch("/editcart",{
+                method:"PATCH",
+                body:formData
+            });
+
+            const resEditCartJSON = await resEditCart.json();
+
+            if(resEditCartJSON.success){
+                $('#quantity-' + itemId).text(quantity);
+                $(`#subtotal-${itemId}`).text((price*quantity).toFixed(2));
+                const total = $(`#total-price`).text();
+                $(`#total-price`).text((Number(total) - price).toFixed(2));
+            }
+            
+
+        }
+    }
+
+    async function removeItem(cartId,productName){
+
+        return Swal.fire({
+            icon:'warning',
+            text:`Are sure to remove ${productName} from your cart`,
+            showCancelButton: true,
+            confirmButtonText: 'Yes',
+            confirmButtonColor: '#3085d6',
+            cancelButtonText: 'No',
+            cancelButtonColor: '#d33',  
+        }).then(async(res)=>{
+            if(res.isConfirmed){
+                const token = localStorage.getItem('token');
+                const resRemoveCart = await fetch(`/removecart?cartId=${cartId}`,{
+                    method:'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    },
+                })
+
+                const resRemoveCartJson = await resRemoveCart.json();
+
+                if(resRemoveCartJson.success){
+                
+                    $("#numberCart").text(resRemoveCartJson.numberCart);
+
+                    Toastify({
+                        text: `${productName} removed from cart!`,
+                        duration: 2000,
+                        gravity: "top",
+                        position: 'right',
+                        className: "custom-toast",
+                        stopOnFocus: true
+                    }).showToast();
+
+                    
+                    $(`#${cartId}`).remove();
+
+                    let newTotal = 0;
+                        cartItems = cartItems.filter(item => item._id !== cartId);
+                        cartItems.forEach(item => {
+                            newTotal += Number(item.subtotal);
+                        });
+                    $('#total-price').text(newTotal.toFixed(2));
+                    
+                    const itemCart = $(`#cart-items`).text();
+
+                    if(itemCart.trim() == ''){
+                        $("#cartFooter").html(`<h1 class='text-center'>Looks like your <img src='cart.png' height='50px' width='50px'/> cart is as light as a feather! Start adding items to make it brim with excitement and possibilities</h1>
+                        <center><button class='btn btn-primary' onclick="location.href='/viewProduct'">View products</button></center>
+                        `)
+                    }
+
+                }
+
+            }
+        })
     }
 </script>
 </body>
