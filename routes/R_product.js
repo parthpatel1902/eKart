@@ -23,4 +23,8 @@ router.get("/numberOfcart",auth.tokenCheck,productController.numberOfCart);
 router.get("/getcartitem",auth.tokenCheck,productController.getCartItem);
 router.patch("/editcart",multipartMiddleware,productController.editCartItem);
 
+// for order model
+router.post("/order",auth.tokenCheck,multipartMiddleware,productController.addorder);
+
+
 module.exports = router;

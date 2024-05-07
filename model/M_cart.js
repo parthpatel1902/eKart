@@ -21,6 +21,14 @@ const cartSchema = new mongoose.Schema({
     },
     productId:{
         type: mongoose.Schema.ObjectId
+    },
+    isPurchased:{
+        type: Boolean,
+        default: false
+    },
+    createdAt:{
+        type: Date,
+        default: Date.now
     }
 });
 

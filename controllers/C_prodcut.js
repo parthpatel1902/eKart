@@ -5,6 +5,9 @@ const multer = require('multer');
 const cart = require('../model/M_cart');
 const fs = require('fs');
 const path = require('path');
+const order = require('../model/M_order');
+const user = require('../model/M_user');
+const address = require('../model/M_address');
 
 // for the product category
 const addCategory = async(req,res)=>{
@@ -219,7 +222,7 @@ const addCart = async(req,res)=>{
         res_add.save()
         .then(async(result) => {
 
-            const totalcart = await cart.find({userId:req.user.id}).count();
+            const totalcart = await cart.find({userId:req.user.id,isPurchased:false}).count();
 
             return res.json({success:true,cartId:res_add._id,numberCart:totalcart});
         })
@@ -241,7 +244,7 @@ const removeCart = async(req,res)=>{
         const removecartRes = await cart.findByIdAndDelete({_id:cartId})
 
         if(removeCart){
-            const totalcart = await cart.find({userId:req.user.id}).count();
+            const totalcart = await cart.find({userId:req.user.id,isPurchased:false}).count();
             return res.json({success:true,numberCart:totalcart});
         }
 
@@ -253,7 +256,7 @@ const removeCart = async(req,res)=>{
 const numberOfCart = async(req,res)=>{
     const userId = req.user.id;
     try {
-        const totalcart = await cart.find({userId:userId}).count();
+        const totalcart = await cart.find({userId:userId,isPurchased:false}).count();
 
         if(totalcart){
             return res.json({success:true,numberCart:totalcart})
@@ -267,7 +270,7 @@ const numberOfCart = async(req,res)=>{
 const getCartItem = async(req,res)=>{
     const userId = req.user.id;
     try {
-        const totalcart = await cart.find({userId:userId});
+        const totalcart = await cart.find({userId:userId,isPurchased:false});
 
         const cartItems = [];
 
@@ -310,6 +313,80 @@ const editCartItem = async(req,res)=>{
 
 // end of the cart model
 
+// for the order model
+
+const addorder = async(req,res)=>{
+    try {
+
+        const order_personName = await user.findOne({_id:req.user.id},{_id:0,name:1});
+
+        const AddressId = await address.findOne({userId:req.user.id},{_id:1});
+
+        const cartRes = await cart.aggregate([
+            {
+              $match: {
+                userId: req.user.id,
+                isPurchased:false
+              }
+            },
+            {
+              $project: {
+                _id: 1,
+                subtotal: { $multiply: ["$price", "$quantity"] },
+                productId:1,
+                quantity:1
+              }
+            }
+        ])
+
+        let amount = 0;
+        
+        const cartId = [];
+
+        const minusQty = [];
+
+        cartRes.map((item)=>{
+            amount = amount + item.subtotal;
+            cartId.push(item._id);
+            minusQty.push({productId:item.productId,quantity:item.quantity});
+        })
+
+        const insert_data = {
+            order_personId:req.user.id,
+            order_personName:order_personName.name,
+            cartId:cartId,
+            AddressId:AddressId._id,
+            paymentMode: req.body.paymentMode || "COD",
+            amount:amount,
+            createdAt:new Date(),
+        }
+
+        const res_add = new order(insert_data);
+
+        res_add.save()
+        .then(async(result) => {
+
+            await cart.updateMany({_id:{$in:cartId}},{$set:{isPurchased:true}});
+
+            minusQty.map(async(item)=>{
+                await product.updateOne({_id:item.productId},{ $inc: { quantity: -item.quantity } } )
+            })
+
+            return res.json({success:true,data:res_add});
+        })
+        .catch((error) => {
+            console.log("Error >>>>> ", error.message);
+            return errorRes(res, 500, "Some Internal Error");
+        });
+
+    } catch (error) {
+        console.log("Error from the order table : ",error);
+        return errorRes(res,500,"some internal error");
+    }
+}
+
+
+
 module.exports = {
     addCategory,
     getCategory,
@@ -324,5 +401,6 @@ module.exports = {
     getCartItem,
     editCartItem,
     deletedProducts,
-    retriveProducts
+    retriveProducts,
+    addorder
 }

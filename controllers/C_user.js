@@ -266,6 +266,67 @@ const changePassword = async (req,res)=>{
 }
 
 
+
+// for user full address
+
+const address = require('../model/M_address');
+
+const addAddress =  async (req,res)=>{
+  try {
+    const {userId,city,state,pincode,building,street,famousplace,area} = req.body;
+  
+    const insert_data = {
+      userId:req.user.id,
+      pincode:pincode,
+      state:state,
+      area:area,
+      city:city,
+      street:street,
+      building:building,
+      famousplace:famousplace
+    };
+
+    const res_add = new address(insert_data);
+    res_add.save()
+        .then(async(result) => {
+            return res.json({success:true});
+        })
+        .catch((error) => {
+            console.log("Error >>>>> ", error.message);
+            return errorRes(res, 500, "Some Internal Error");
+        });
+
+  } catch (error) {
+    console.log("Error from the add address : ",error);
+    return errorRes(res,500,"Some Internal Error")
+  }
+}
+
+const getAddress = async(req,res)=>{
+  try {
+    const id = req.user.id;
+
+    const addressFind = await address.find({userId:id},{isDelete:0,__v:0});
+
+    return res.json({success:true,data:addressFind});
+
+  } catch (error) {
+    console.log("Error from the add address : ",error);
+    return errorRes(res,500,"Some Internal Error")
+  }
+}
+
+const editAddress = async(req,res)=>{
+  try {
+    const id = req.user.id;
+    const data = await address.updateOne({userId:id},{...req.body},{new:true})
+    return res.json({success:true,data:data});
+
+  } catch (error) {
+    console.log("Error from the edit address",error);
+  }
+}
+
 module.exports = {
-    addActivity,getActivity,getExcel,getCsv,userLogin,getUser,sendEmailForForgetPassword,forgetPassword,changePassword
+    addActivity,getActivity,getExcel,getCsv,userLogin,getUser,sendEmailForForgetPassword,forgetPassword,changePassword,addAddress,getAddress,editAddress
 }

@@ -59,4 +59,9 @@ router.get("/otpemail",userController.sendEmailForForgetPassword);
 router.post("/forgetpassword",multipartMiddleware,userController.forgetPassword);
 router.post("/changeUserPassword",auth.tokenCheck,multipartMiddleware,userController.changePassword);
 
+
+router.post("/address", auth.tokenCheck,multipartMiddleware,userController.addAddress);
+router.get("/address",auth.tokenCheck,userController.getAddress);
+router.patch("/address",auth.tokenCheck,multipartMiddleware,userController.editAddress);
+
 module.exports = router;
