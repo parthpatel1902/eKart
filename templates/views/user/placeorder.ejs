@@ -10,8 +10,33 @@
             font-family: 'Times New Roman', Times, serif;
         }
     </style>
+    <script src="https://js.stripe.com/v3/"></script>
 </head>
 <body>
+
+    <!-- Modal for entering card details -->
+    <div class="modal fade" id="cardDetailsModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Enter Card Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="cardDetailsForm">
+                        <div id="card-element"><!--Stripe.js injects the Card Element--></div>
+                        <div id="card-errors" role="alert"></div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" id="payButton" onclick="submitCardDetails()">Pay</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Your existing HTML content -->
 
     <!-- Model for add address -->
 
@@ -26,32 +51,39 @@
                 <div id="">
                     <div class="mb-3">
                         <label for="street" class="form-label">Street Name :</label>
-                        <input type="text" class="form-control" id="street" placeholder="Enter street  name">
+                        <input type="text" class="form-control" id="street" placeholder="Enter street name" onblur="validateStreetName()">
                         <div id="nameError" class="text-danger"></div>
                     </div>
                     <div class="mb-3">
                         <label for="" class="form-label">Building No :</label>
-                        <input type="text" class="form-control" id="building" placeholder="Enter building no">
+                        <input type="text" class="form-control" id="building" placeholder="Enter building no" onblur="validateBuildingNo()">
+                        <div id="buildingError" class="text-danger"></div>
                     </div>
                     <div class="mb-3">
                         <label for="" class="form-label">Area / Vilage Name:</label>
-                        <input type="text" class="form-control" id="area" placeholder="Enter Area / Vilage Name : ">
+                        <input type="text" class="form-control" id="area" placeholder="Enter Area / Vilage Name : " onblur="validateAreaName()">
+                        <div id="areaError" class="text-danger"></div>
                     </div>
                     <div class="mb-3">
                         <label for="" class="form-label">Pinccode :</label>
-                        <input type="number" class="form-control" id="pincode" placeholder="Enter pincode">
-                    </div>
-                    <div class="mb-3">
-                        <label for="" class="form-label">City :</label>
-                        <input type="text" class="form-control" id="city" placeholder="Enter city name: ">
+                        <input type="text" maxlength="6" class="form-control" id="pincode" placeholder="Enter pincode" onkeypress="inputPincode(event)" onblur="validatePincode(event)">
+                        <div id="pincodeError" class="text-danger"></div>
                     </div>
                     <div class="mb-3">
                         <label for="" class="form-label">State :</label>
-                        <input type="text" class="form-control" id="state" placeholder="Enter state name: ">
+                        <select name="" id="state" class="form-control" onchange="loadCities()">
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="" class="form-label">City :</label>
+                        <select name="" id="city" class="form-control">
+                            <option value="" disabled>select state first</option>
+                        </select>
                     </div>
                     <div class="mb-3">
                         <label for="" class="form-label">Famous place nearest you :</label>
                         <input type="text" class="form-control" id="famousplace" placeholder="Enter Famous place nearest you">
+                        <div id="famousplaceError" class="text-danger"></div>
                     </div>
                 </div>
               </div>
@@ -62,6 +94,200 @@
           </div>
         </div>
     </div>
+
+
+    <script>
+        loadState();
+
+        async function loadState(){
+            const data = await fetch("https://api.countrystatecity.in/v1/countries/IN/states/",{
+                headers:{
+                    "X-CSCAPI-KEY":"NHhvOEcyWk50N2Vna3VFTE00bFp3MjFKR0ZEOUhkZlg4RTk1MlJlaA=="
+                }
+            });
+
+            const dataJSON = await data.json();
+
+            dataJSON.sort((a, b) => {
+                return a.name.localeCompare(b.name);
+            });
+
+            let htmlState = `<option value="" disabled selected>select your state</option>`;
+
+            dataJSON.map((item)=>{
+                htmlState += `<option value="${item.iso2}" data-state='${item.name}' name='${item.name}'>${item.name}</option>`;
+            })
+
+            document.getElementById("state").innerHTML = htmlState;
+            document.getElementById("state1").innerHTML = htmlState;
+        }
+    
+        async function loadCities(){
+
+            const state = document.getElementById("state").value;
+
+            const data = await fetch(`https://api.countrystatecity.in/v1/countries/IN/states/${state}/cities`,{
+                headers:{
+                    "X-CSCAPI-KEY":"NHhvOEcyWk50N2Vna3VFTE00bFp3MjFKR0ZEOUhkZlg4RTk1MlJlaA=="
+                }
+            });
+
+            const dataJSON = await data.json();
+
+            dataJSON.sort((a, b) => {
+                return a.name.localeCompare(b.name);
+            });
+
+            let htmlState = `<option value="" disabled>select your city</option>`;
+
+            dataJSON.map((item)=>{
+                htmlState += `<option value="${item.name}">${item.name}</option>`;
+            })
+
+            document.getElementById("city").innerHTML = htmlState;
+        }
+    </script>
+
+<script>
+
+// for the street name validation
+function validateStreetName() {
+    const streetInput = document.getElementById('street');
+    const streetValue = streetInput.value.trim();
+
+    const regex = /^[a-zA-Z0-9\s,-]+$/;
+
+    if (!streetValue) {
+        // If street name is empty
+        document.getElementById('nameError').textContent = "Street name is required.";
+        streetInput.classList.add("is-invalid");
+    } else if (!regex.test(streetValue)) {
+        // If street name contains invalid characters
+        document.getElementById('nameError').textContent = "Street name can only contain letters, numbers, spaces, and commas.";
+        streetInput.classList.add("is-invalid");
+    } else {
+        // If street name is valid
+        document.getElementById('nameError').textContent = "";
+        streetInput.classList.remove("is-invalid");
+        return true;
+    }
+    return false;
+}
+document.getElementById('street').addEventListener('input', validateStreetName);
+
+
+function validateBuildingNo() {
+    const buildingInput = document.getElementById('building');
+    const buildingValue = buildingInput.value.trim();
+
+    const regex = /^[a-zA-Z0-9\-]+$/;
+
+    if (!buildingValue) {
+        // If building number is empty
+        document.getElementById('buildingError').textContent = "Building number is required.";
+        buildingInput.classList.add("is-invalid");
+    } else if (!regex.test(buildingValue)) {
+        // If building number contains invalid characters
+        document.getElementById('buildingError').textContent = "Building number can only contain letters, numbers, and dashes.";
+        buildingInput.classList.add("is-invalid");
+    } else {
+        // If building number is valid
+        document.getElementById('buildingError').textContent = "";
+        buildingInput.classList.remove("is-invalid");
+        return true;
+    }
+    return false;
+}
+document.getElementById('building').addEventListener('input', validateBuildingNo);
+
+function validateAreaName() {
+    const areaInput = document.getElementById('area');
+    const areaValue = areaInput.value.trim();
+
+    const regex = /^[a-zA-Z0-9\s\-]+$/;
+
+    if (!areaValue) {
+        // If area name is empty
+        document.getElementById('areaError').textContent = "Area / Village name is required.";
+        areaInput.classList.add("is-invalid");
+    } else if (!regex.test(areaValue)) {
+        // If area name contains invalid characters
+        document.getElementById('areaError').textContent = "Area / Village name can only contain letters, numbers, spaces, and dashes.";
+        areaInput.classList.add("is-invalid");
+    } else {
+        // If area name is valid
+        document.getElementById('areaError').textContent = "";
+        areaInput.classList.remove("is-invalid");
+        return true;
+    }
+    return false;
+}
+document.getElementById('area').addEventListener('input', validateAreaName);
+
+function inputPincode(event){
+    const keyPressed = event.key;
+    if (
+        !/^\d$/.test(keyPressed) &&
+        keyPressed !== "Backspace" &&
+        keyPressed !== "ArrowLeft" &&
+        keyPressed !== "ArrowRight"
+    ) {
+        event.preventDefault();
+        return;
+    }
+}
+
+function validatePincode(event) {
+    
+    const pincodeInput = document.getElementById('pincode');
+    const pincodeValue = pincodeInput.value.trim();
+
+    const regex = /^[0-9]{6}$/;
+
+    if (!pincodeValue) {
+        document.getElementById('pincodeError').textContent = "Pincode is required.";
+        pincodeInput.classList.add("is-invalid");
+    } else if (!regex.test(pincodeValue)) {
+        document.getElementById('pincodeError').textContent = "Pincode must contain exactly 6 digits.";
+        pincodeInput.classList.add("is-invalid");
+    } else {
+        document.getElementById('pincodeError').textContent = "";
+        pincodeInput.classList.remove("is-invalid");
+    }
+
+    if (!pincodeValue) {
+        pincodeInput.setCustomValidity("Pincode is required.");
+    } else {
+        pincodeInput.setCustomValidity("");
+    }
+}
+document.getElementById('pincode').addEventListener('input', validatePincode);
+
+function validateFamousplace() {
+    const streetInput = document.getElementById('famousplace');
+    const streetValue = streetInput.value.trim();
+
+    const regex = /^[a-zA-Z0-9\s,-]+$/;
+
+    if (!streetValue) {
+        // If street name is empty
+        document.getElementById('famousplaceError').textContent = "famousplace name is required.";
+        streetInput.classList.add("is-invalid");
+    } else if (!regex.test(streetValue)) {
+        // If street name contains invalid characters
+        document.getElementById('famousplaceError').textContent = "famousplace name can only contain letters, numbers, spaces, and commas.";
+        streetInput.classList.add("is-invalid");
+    } else {
+        // If street name is valid
+        document.getElementById('famousplaceError').textContent = "";
+        streetInput.classList.remove("is-invalid");
+        return true;
+    }
+    return false;
+}
+document.getElementById('famousplace').addEventListener('input', validateFamousplace);
+
+</script>
 
     <!-- End of add address model -->
 
@@ -78,32 +304,39 @@
                 <div id="">
                     <div class="mb-3">
                         <label for="street" class="form-label">Street Name :</label>
-                        <input type="text" class="form-control" id="street1" placeholder="Enter street name">
-                        <div id="nameError" class="text-danger"></div>
+                        <input type="text" class="form-control" id="street1" placeholder="Enter street name" onblur="validateStreetName1()">
+                        <div id="nameError1" class="text-danger"></div>
                     </div>
                     <div class="mb-3">
                         <label for="" class="form-label">Building No :</label>
-                        <input type="text" class="form-control" id="building1" placeholder="Enter building no">
+                        <input type="text" class="form-control" id="building1" placeholder="Enter building no" onblur="validateBuildingNo1()">
+                        <div id="buildingError1" class="text-danger"></div>
                     </div>
                     <div class="mb-3">
                         <label for="" class="form-label">Area / Vilage Name:</label>
-                        <input type="text" class="form-control" id="area1" placeholder="Enter Area / Vilage Name : ">
+                        <input type="text" class="form-control" id="area1" placeholder="Enter Area / Vilage Name : " onblur="validateAreaName1()">
+                        <div id="areaError1" class="text-danger"></div>
                     </div>
                     <div class="mb-3">
                         <label for="" class="form-label">Pinccode :</label>
-                        <input type="number" class="form-control" id="pincode1" placeholder="Enter pincode">
-                    </div>
-                    <div class="mb-3">
-                        <label for="" class="form-label">City :</label>
-                        <input type="text" class="form-control" id="city1" placeholder="Enter city name: ">
+                        <input type="text" maxlength="6" class="form-control" id="pincode1" placeholder="Enter pincode" onkeypress="inputPincode(event)" onblur="validatePincode1(event)">
+                        <div id="pincodeError1" class="text-danger"></div>
                     </div>
                     <div class="mb-3">
                         <label for="" class="form-label">State :</label>
-                        <input type="text" class="form-control" id="state1" placeholder="Enter state name: ">
+                        <select name="" id="state1" class="form-control" onchange="loadCitieswhenEdit('')">
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="" class="form-label">City :</label>
+                        <select name="" id="city1" class="form-control">
+                            <option value="" disabled>select state first</option>
+                        </select>
                     </div>
                     <div class="mb-3">
                         <label for="" class="form-label">Famous place nearest you :</label>
                         <input type="text" class="form-control" id="famousplace1" placeholder="Enter Famous place nearest you">
+                        <div id="famousplaceError1" class="text-danger"></div>
                     </div>
                 </div>
               </div>
@@ -114,6 +347,132 @@
           </div>
         </div>
     </div>
+
+<script>
+function validateStreetName1() {
+    const streetInput = document.getElementById('street1');
+    const streetValue = streetInput.value.trim();
+
+    const regex = /^[a-zA-Z0-9\s,-]+$/;
+
+    if (!streetValue) {
+        // If street name is empty
+        document.getElementById('nameError1').textContent = "Street name is required.";
+        streetInput.classList.add("is-invalid");
+    } else if (!regex.test(streetValue)) {
+        // If street name contains invalid characters
+        document.getElementById('nameError1').textContent = "Street name can only contain letters, numbers, spaces, and commas.";
+        streetInput.classList.add("is-invalid");
+    } else {
+        // If street name is valid
+        document.getElementById('nameError1').textContent = "";
+        streetInput.classList.remove("is-invalid");
+        return true;
+    }
+    return false;
+}
+document.getElementById('street1').addEventListener('input', validateStreetName1);
+
+function validateBuildingNo1() {
+    const buildingInput = document.getElementById('building1');
+    const buildingValue = buildingInput.value.trim();
+
+    const regex = /^[a-zA-Z0-9\-]+$/;
+
+    if (!buildingValue) {
+        // If building number is empty
+        document.getElementById('buildingError1').textContent = "Building number is required.";
+        buildingInput.classList.add("is-invalid");
+    } else if (!regex.test(buildingValue)) {
+        // If building number contains invalid characters
+        document.getElementById('buildingError1').textContent = "Building number can only contain letters, numbers, and dashes.";
+        buildingInput.classList.add("is-invalid");
+    } else {
+        // If building number is valid
+        document.getElementById('buildingError1').textContent = "";
+        buildingInput.classList.remove("is-invalid");
+        return true;
+    }
+    return false;
+}
+document.getElementById('building1').addEventListener('input', validateBuildingNo1);
+
+function validateAreaName1() {
+    const areaInput = document.getElementById('area1');
+    const areaValue = areaInput.value.trim();
+
+    const regex = /^[a-zA-Z0-9\s\-]+$/;
+
+    if (!areaValue) {
+        // If area name is empty
+        document.getElementById('areaError1').textContent = "Area / Village name is required.";
+        areaInput.classList.add("is-invalid");
+    } else if (!regex.test(areaValue)) {
+        // If area name contains invalid characters
+        document.getElementById('areaError1').textContent = "Area / Village name can only contain letters, numbers, spaces, and dashes.";
+        areaInput.classList.add("is-invalid");
+    } else {
+        // If area name is valid
+        document.getElementById('areaError1').textContent = "";
+        areaInput.classList.remove("is-invalid");
+        return true;
+    }
+    return false;
+}
+document.getElementById('area1').addEventListener('input', validateAreaName1);
+
+function validatePincode1(event) {
+    
+    const pincodeInput = document.getElementById('pincode1');
+    const pincodeValue = pincodeInput.value.trim();
+
+    const regex = /^[0-9]{6}$/;
+
+    if (!pincodeValue) {
+        document.getElementById('pincodeError1').textContent = "Pincode is required.";
+        pincodeInput.classList.add("is-invalid");
+    } else if (!regex.test(pincodeValue)) {
+        document.getElementById('pincodeError1').textContent = "Pincode must contain exactly 6 digits.";
+        pincodeInput.classList.add("is-invalid");
+    } else {
+        document.getElementById('pincodeError1').textContent = "";
+        pincodeInput.classList.remove("is-invalid");
+    }
+
+    if (!pincodeValue) {
+        pincodeInput.setCustomValidity("Pincode is required.");
+    } else {
+        pincodeInput.setCustomValidity("");
+    }
+}
+document.getElementById('pincode1').addEventListener('input', validatePincode1);
+
+function validateFamousplace1() {
+    const streetInput = document.getElementById('famousplace1');
+    const streetValue = streetInput.value.trim();
+
+    const regex = /^[a-zA-Z0-9\s,-]+$/;
+
+    if (!streetValue) {
+        // If street name is empty
+        document.getElementById('famousplaceError1').textContent = "famousplace name is required.";
+        streetInput.classList.add("is-invalid");
+    } else if (!regex.test(streetValue)) {
+        // If street name contains invalid characters
+        document.getElementById('famousplaceError1').textContent = "famousplace name can only contain letters, numbers, spaces, and commas.";
+        streetInput.classList.add("is-invalid");
+    } else {
+        // If street name is valid
+        document.getElementById('famousplaceError1').textContent = "";
+        streetInput.classList.remove("is-invalid");
+        return true;
+    }
+    return false;
+}
+document.getElementById('famousplace1').addEventListener('input', validateFamousplace1);
+
+</script>
+
 
     <!-- End of the edit address -->
 
@@ -138,34 +497,93 @@
                     </div>
                 </div>
                 <div class="col-md-12 mt-1 form-group">
-                    <p class="shadow-sm rounded-4 border bg-light p-2" style="font-size: large;">Select your payment method : <select class="form-control" id="selectMethod" onchange="paymentMethod()"><option value=""></option> <option value="cashondelivery">Cash on delivery</option> <option value="paywithcard">Pay with card</option> </select> </p>
+                    <p class="shadow-sm rounded-4 border bg-light p-2" style="font-size: large;">Payment method : 
+                        <select class="form-control" id="selectMethod" onchange="paymentMethod()">
+                            <option value="" disabled selected>Select your payment method</option>
+                            <option value="cashondelivery">Cash on delivery</option> 
+                            <option value="paywithcard">Pay with card</option> 
+                        </select> 
+                    </p>
                 </div>
                 <div class="col-md-12 mt-1 mb-3" id="paymentOption">
-
+                   
                 </div>
             </div>
         </div>
     </div>
 </body>
+
+<!-- Stripe handling -->
 <script>
+
+    const stripe = Stripe(`<%= publickey %>`);
+    const elements = stripe.elements();
+    const cardElement = elements.create('card');
+    cardElement.mount('#card-element');
+
+    function openCardDetailsModal() {
+        $('#cardDetailsModal').modal('show');
+    }
+
+    function submitCardDetails() {
+        stripe.createToken(cardElement).then(function(result) {
+            if (result.error) {
+                const errorElement = document.getElementById('card-errors');
+                errorElement.textContent = result.error.message;
+            } else {
+                stripeTokenHandler(result.token);
+            }
+        });
+    }
+
+    async function stripeTokenHandler(token) {
+        //console.log(token.id);
+
+        document.getElementById("payButton").disabled = true;
+
+        const formData = new FormData();
+        formData.append('pid',token.id);
+
+        const resPayment = await fetch("/payment",{
+            method:"POST",
+            headers:{
+                "Authorization":`Bearer ${localStorage.getItem('token')}`
+            },
+            body:formData
+        });
+
+        const resJSON = await resPayment.json();
+
+        if(resJSON.success){
+            return Swal.fire({
+                title: "Success!",
+                text: "Your order is successfully placed.",
+                icon: "success"
+            }).then((result)=>{
+                if(result.isConfirmed){
+                    window.location.href = "/viewProduct";
+                }
+            })
+        }
+    }
+
     function paymentMethod(){
         let payment = document.getElementById("selectMethod").value;
 
         if(payment == 'paywithcard'){
-            $("#paymentOption").html(`<button class='btn btn-primary' onclick='placeorderWithCard()'>pay with card</button>`);
+            $("#paymentOption").html('');
+            openCardDetailsModal();
         }else{
             $("#paymentOption").html(`<button class='btn btn-primary' onclick='placeorder()'>Confirm placeorder</button>`);
         }
         
     }
 </script>
+<!-- End Stripe handling -->
+
 <script>
 
     // for the order
-
-    async function placeorderWithCard(){
-
-    }
 
     async function placeorder(){
         const token = localStorage.getItem('token');
@@ -223,7 +641,7 @@
 
         const item = await cart.json();
 
-        let no = 0;
+        let no = 1;
 
         let html = `<table class='table'><thead><th>No</th><th>ProductName</th><th>product_picture</th><th>Price</th><th>quantity</th><th>subtotal</th><tbody>`;
 
@@ -251,8 +669,62 @@
         $("#totalAmount").text(total.toFixed(2));
     }
 
+    async function editAddress(item){
+        document.getElementById('street1').value = item.street;
+        document.getElementById('building1').value = item.building;
+        document.getElementById('area1').value = item.area;
+        document.getElementById('pincode1').value = item.pincode;
+        
+        var selectElement = document.getElementById('state1');
 
-    // for add address
+        let st;
+
+        for (var i = 0; i < selectElement.options.length; i++) 
+        {
+            if (selectElement.options[i].getAttribute('name') === item.state) {
+                selectElement.options[i].selected = true;
+                st = selectElement.value;
+                break;
+            }
+        }
+
+        await loadCitieswhenEdit(st);
+
+        document.getElementById("city1").value = item.city;
+        document.getElementById('famousplace1').value = item.famousplace;
+    }
+
+    async function loadCitieswhenEdit(st){
+
+        let state = '';
+
+        if(st == ''){
+            state = document.getElementById("state1").value;
+        }else{
+            state = st;
+        }
+
+        const data = await fetch(`https://api.countrystatecity.in/v1/countries/IN/states/${state}/cities`,{
+                headers:{
+                    "X-CSCAPI-KEY":"NHhvOEcyWk50N2Vna3VFTE00bFp3MjFKR0ZEOUhkZlg4RTk1MlJlaA=="
+                }
+            });
+
+        const dataJSON = await data.json();
+
+        dataJSON.sort((a, b) => {
+            return a.name.localeCompare(b.name);
+        });
+
+        let htmlState = `<option value="" disabled>select your city</option>`;
+
+        dataJSON.map((item)=>{
+            htmlState += `<option value="${item.name}">${item.name}</option>`;
+        })
+
+        document.getElementById("city1").innerHTML = htmlState;
+    }
+
 
     async function handleAddressEdit(){
 
@@ -260,9 +732,19 @@
         const building = document.getElementById('building1').value;
         const pincode = document.getElementById('pincode1').value;
         const city = document.getElementById('city1').value;
-        const state = document.getElementById('state1').value;
+        const selectElement = document.getElementById('state1');
+        const selectedOption = selectElement.options[selectElement.selectedIndex];
+        const state = selectedOption.getAttribute('data-state');
         const famousplace = document.getElementById('famousplace1').value;
         const area = document.getElementById('area1').value;
+
+        if(street == ''|| building == '' || pincode == '' || city == '' || state == '' || famousplace == '' || area == '' ){
+            return Swal.fire({
+                icon: 'error',
+                title: 'Oops...',
+                text: 'Please fill all the fields!',
+            });
+        }
 
         const formData = new FormData();
         formData.append('street',street);
@@ -294,25 +776,26 @@
         }
     }
 
-    function editAddress(item){
-        document.getElementById('street1').value = item.street;
-        document.getElementById('building1').value = item.building;
-        document.getElementById('pincode1').value = item.pincode;
-        document.getElementById('city1').value = item.city;
-        document.getElementById('state1').value = item.state;
-        document.getElementById('famousplace1').value = item.famousplace;
-        document.getElementById('area1').value = item.area;
-    }
-
+   
 
     async function addAddress(){
         const street = document.getElementById('street').value;
         const building = document.getElementById('building').value;
         const pincode = document.getElementById('pincode').value;
         const city = document.getElementById('city').value;
-        const state = document.getElementById('state').value;
+        const selectElement = document.getElementById('state');
+        const selectedOption = selectElement.options[selectElement.selectedIndex];
+        const state = selectedOption.getAttribute('data-state');
         const famousplace = document.getElementById('famousplace').value;
         const area = document.getElementById('area').value;
+
+        if(street == ''|| building == '' || pincode == '' || city == '' || state == '' || famousplace == '' || area == '' ){
+            return Swal.fire({
+                icon: 'error',
+                title: 'Oops...',
+                text: 'Please fill all the fields!',
+            });
+        }
 
         const formData = new FormData();
         formData.append('street',street);
@@ -343,7 +826,6 @@
             })
         }
     }
-
 
     // for display address
 

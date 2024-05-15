@@ -1,11 +1,7 @@
 <html>
   <%- include('../../partials/admin_navbar.ejs') %>
-  <link href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap5.min.css" rel="stylesheet">
-  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-  <!-- Include necessary JS files -->
-  <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
-  <script src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap5.min.js"></script>
-  <!-- Your existing JavaScript code here -->
+  <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.css">
+
   <!-- Model  for add category  -->
   <div class="modal fade" id="addCategory" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
     <div class="modal-dialog">
@@ -53,6 +49,30 @@
 
   <!-- End of view category Model -->
 
+
+  <!-- model of view product -->
+
+  <div class="modal fade" id="viewProduct" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="exampleModalLabel">View product</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+          <div class="modal-body">
+            <div id="displaySingleProduct">
+
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- end of view product model -->
+
   <!-- model for the display product -->
 
   <div class="modal fade" id="addproduct" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
@@ -65,8 +85,8 @@
         <div class="modal-body">
           <div class="mb-3">
             <label for="productName" class="form-label">Product Name</label>
-            <input type="text" class="form-control" id="productName" name="productName" required>
-            <div id="productNameFeedback" class="invalid-feedback"></div>
+            <input type="text" class="form-control" id="productName" onkeydown="validateProductName()" onkeypress="validateProductName()" onchange="validateProductName()" onblur="validateProductName()" name="productName" required>
+            <div id="productNameFeedback" style="color: red;"></div>
           </div>
           <div class="mb-3">
             <label for="categoryName" class="form-label">Select Category Name</label>
@@ -76,18 +96,18 @@
           </div>
           <div class="mb-3">
             <label for="price" class="form-label">Price</label>
-            <input type="number" class="form-control" id="price" name="price" required>
-            <div id="priceFeedback" class="invalid-feedback"></div>
+            <input type="text" class="form-control" id="price" name="price" onkeydown="restrictInputPrice(event)" onkeypress="restrictInputPrice(event)" onchange="restrictInputPrice(event)" onblur="restrictInputPrice(event)" required>
+            <div id="priceFeedback" style="color: red;"></div>
           </div>
           <div class="mb-3">
             <label for="quantity" class="form-label">Quantity</label>
-            <input type="number" class="form-control" id="quantity" name="quantity" required>
-            <div id="quantityFeedback" class="invalid-feedback"></div>
+            <input type="text" class="form-control" id="quantity" name="quantity" onkeydown="restrictInputQty(event)" onkeypress="restrictInputQty(event)" onchange="restrictInputQty(event)" onblur="restrictInputQty(event)" required>
+            <div id="qtyFeedback" style="color: red;"></div>
           </div>
           <div class="mb-3">
             <label for="discount" class="form-label">Discount</label>
-            <input type="number" class="form-control" id="discount" name="discount">
-            <div id="discountFeedback" class="invalid-feedback"></div>
+            <input type="text" class="form-control" id="discount" name="discount" maxlength="3" onkeypress="restrictInputDiscount(event)" onblur="restrictInputDiscount(event)" onkeydown="restrictInputDiscount(event)" onblur="restrictInputDiscount(event)"/>
+            <div id="discountFeedback" style="color: red;"></div>
           </div>
           <div class="mb-3">
             <label for="product_picture" class="form-label">Product Picture</label>
@@ -101,6 +121,108 @@
     </div>
   </div>
   </div>
+  <script>
+
+    function validateProductName(){
+      const value = document.getElementById('productName').value;
+
+      if(value.trim() == ''){
+        document.getElementById('productNameFeedback').innerText = 'Product name is required.';
+        document.getElementById('productName').style.border = "1px solid red";
+      }else if(!/^[a-zA-Z0-9\s]+$/.test(value)){
+        document.getElementById('productNameFeedback').innerText = 'Product name can only contain letters, numbers, and spaces.';
+        document.getElementById('productName').style.border = "1px solid red";
+      }else{
+        document.getElementById('productNameFeedback').innerText = '';
+        document.getElementById('productName').style.border = "";
+      }
+      
+    }
+
+
+    function restrictInputPrice(event) {
+    const keyPressed = event.key;
+    const currentValue = event.target.value;
+
+    if (!/^\d$/.test(keyPressed) &&
+        keyPressed !== "Backspace" &&
+        keyPressed !== "ArrowLeft" &&
+        keyPressed !== "ArrowRight" &&
+        keyPressed !== ".") {
+        event.preventDefault();
+    }
+
+    if (keyPressed === "." && currentValue.includes(".")) {
+        event.preventDefault();
+    }
+
+    if(currentValue == ''){
+      document.getElementById('price').style.border = "1px solid red";
+      document.getElementById('priceFeedback').innerText = "price is required.";
+    }else if(currentValue < 0){
+      document.getElementById('price').style.border = "1px solid red";
+      document.getElementById('priceFeedback').innerText = "price must be greater than 0.";
+    }
+    else{
+      document.getElementById('price').style.border = "";
+      document.getElementById('priceFeedback').innerText = "";
+    }
+}
+
+
+    function restrictInputDiscount(event){
+      const keyPressed = event.key;
+
+      if (
+        !/^\d$/.test(keyPressed) &&
+        keyPressed !== "Backspace" &&
+        keyPressed !== "ArrowLeft" &&
+        keyPressed !== "ArrowRight"
+      ) {
+        event.preventDefault(); 
+      }
+
+      const value = document.getElementById('discount').value;
+
+      if(value == ''){
+        document.getElementById('discount').style.border = "1px solid red";
+        document.getElementById('discountFeedback').innerText = "discount is required.";
+      }
+      else if(!(value >= 0 && value <= 100 )){
+        document.getElementById('discount').style.border = "1px solid red";
+        document.getElementById('discountFeedback').innerText = "you enter discount between 0 to 100.";
+      }else{
+        document.getElementById('discount').style.border = "";
+        document.getElementById('discountFeedback').innerText = "";
+      }
+
+
+    }
+
+    function restrictInputQty(event) {
+      const keyPressed = event.key;
+
+      if (
+        !/^\d$/.test(keyPressed) &&
+        keyPressed !== "Backspace" &&
+        keyPressed !== "ArrowLeft" &&
+        keyPressed !== "ArrowRight"
+      ) {
+        event.preventDefault(); 
+      }
+      const qty = document.getElementById('quantity').value;
+  
+      if(qty.trim() == ''){
+        document.getElementById('quantity').style.border = "1px solid red";
+        document.getElementById('qtyFeedback').innerText = 'Quantity is required';
+      }else{
+        document.getElementById('quantity').style.border = "";
+        document.getElementById('qtyFeedback').innerText = '';
+      }
+    }
+
+  
+  </script>
 
   <div class="modal fade" id="editproduct" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
     <div class="modal-dialog">
@@ -110,12 +232,15 @@
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body">
-          <center><img src="" alt="" id="productpicture1" class="border shadow-sm" height="70px" width="100px"></center><hr/>
+          <center><img src="" alt="" id="productpicture1" class="border shadow-sm" height="70px" width="100px"/></center><hr/>
           <input type="hidden" name="pid" id="productId"/>
+
+          <!-- ------------------------------------------------------------------- -->
+
           <div class="mb-3">
-            <label for="productName" class="form-label">Product Name</label>
-            <input type="text" class="form-control" id="productName1" name="productName1" required>
-            <div id="productNameFeedback" class="invalid-feedback"></div>
+            <label for="productName1" class="form-label">Product Name</label>
+            <input type="text" class="form-control" id="productName1" onkeydown="validateProductName1()" onkeypress="validateProductName1()" onchange="validateProductName1()" onblur="validateProductName1()" name="productName1" required>
+            <div id="productNameFeedback1" style="color: red;"></div>
           </div>
           <div class="mb-3">
             <label for="categoryName" class="form-label">Select Category Name</label>
@@ -124,19 +249,19 @@
             </select>
           </div>
           <div class="mb-3">
-            <label for="price" class="form-label">Price</label>
-            <input type="number" class="form-control" id="price1" name="price1" required>
-            <div id="priceFeedback" class="invalid-feedback"></div>
+            <label for="price1" class="form-label">Price</label>
+            <input type="text" class="form-control" id="price1" name="price1" onkeydown="restrictInputPrice1(event)" onkeypress="restrictInputPrice1(event)" onchange="restrictInputPrice1(event)" onblur="restrictInputPrice1(event)" required>
+            <div id="priceFeedback1" style="color: red;"></div>
           </div>
           <div class="mb-3">
             <label for="quantity" class="form-label">Quantity</label>
-            <input type="number" class="form-control" id="quantity1" name="quantity1" required>
-            <div id="quantityFeedback" class="invalid-feedback"></div>
+            <input type="text" class="form-control" id="quantity1" name="quantity1" onkeydown="restrictInputQty1(event)" onkeypress="restrictInputQty1(event)" onchange="restrictInputQty1(event)" onblur="restrictInputQty1(event)" required>
+            <div id="qtyFeedback1" style="color: red;"></div>
           </div>
           <div class="mb-3">
-            <label for="discount" class="form-label">Discount</label>
-            <input type="number" class="form-control" id="discount1" name="discount1">
-            <div id="discountFeedback" class="invalid-feedback"></div>
+            <label for="discount1" class="form-label">Discount</label>
+            <input type="text" class="form-control" id="discount1" name="discount1" maxlength="3" onkeypress="restrictInputDiscount1(event)" onblur="restrictInputDiscount1(event)" onkeydown="restrictInputDiscount1(event)" onblur="restrictInputDiscount1(event)"/>
+            <div id="discountFeedback1" style="color: red;"></div>
           </div>
           <div class="mb-3">
             <label for="product_picture" class="form-label">Product Picture</label>
@@ -150,6 +275,107 @@
     </div>
   </div>
   </div>
+
+  <script>
+    function validateProductName1(){
+      const value = document.getElementById('productName1').value;
+
+      if(value.trim() == ''){
+        document.getElementById('productNameFeedback1').innerText = 'Product name is required.';
+        document.getElementById('productName1').style.border = "1px solid red";
+      }else if(!/^[a-zA-Z0-9\s]+$/.test(value)){
+        document.getElementById('productNameFeedback1').innerText = 'Product name can only contain letters, numbers, and spaces.';
+        document.getElementById('productName1').style.border = "1px solid red";
+      }else{
+        document.getElementById('productNameFeedback1').innerText = '';
+        document.getElementById('productName1').style.border = "";
+      }
+      
+    }
+
+    function restrictInputPrice1(event) {
+    const keyPressed = event.key;
+    const currentValue = event.target.value;
+
+    if (!/^\d$/.test(keyPressed) &&
+        keyPressed !== "Backspace" &&
+        keyPressed !== "ArrowLeft" &&
+        keyPressed !== "ArrowRight" &&
+        keyPressed !== ".") {
+        event.preventDefault();
+    }
+
+    if (keyPressed === "." && currentValue.includes(".")) {
+        event.preventDefault();
+    }
+
+    if(currentValue == ''){
+      document.getElementById('price1').style.border = "1px solid red";
+      document.getElementById('priceFeedback1').innerText = "price is required.";
+    }else if(currentValue < 0){
+      document.getElementById('price1').style.border = "1px solid red";
+      document.getElementById('priceFeedback1').innerText = "price must be greater than 0.";
+    }
+    else{
+      document.getElementById('price1').style.border = "";
+      document.getElementById('priceFeedback1').innerText = "";
+    }
+}
+
+
+    function restrictInputDiscount1(event){
+      const keyPressed = event.key;
+
+      if (
+        !/^\d$/.test(keyPressed) &&
+        keyPressed !== "Backspace" &&
+        keyPressed !== "ArrowLeft" &&
+        keyPressed !== "ArrowRight"
+      ) {
+        event.preventDefault(); 
+      }
+
+      const value = document.getElementById('discount1').value;
+
+      if(value == ''){
+        document.getElementById('discount1').style.border = "1px solid red";
+        document.getElementById('discountFeedback1').innerText = "discount is required.";
+      }
+      else if(!(value >= 0 && value <= 100 )){
+        document.getElementById('discount1').style.border = "1px solid red";
+        document.getElementById('discountFeedback1').innerText = "you enter discount between 0 to 100.";
+      }else{
+        document.getElementById('discount1').style.border = "";
+        document.getElementById('discountFeedback1').innerText = "";
+      }
+
+
+    }
+
+    function restrictInputQty1(event) {
+      const keyPressed = event.key;
+
+      if (
+        !/^\d$/.test(keyPressed) &&
+        keyPressed !== "Backspace" &&
+        keyPressed !== "ArrowLeft" &&
+        keyPressed !== "ArrowRight"
+      ) {
+        event.preventDefault(); 
+      }
+      const qty = document.getElementById('quantity1').value;
+  
+      if(qty.trim() == ''){
+        document.getElementById('quantity1').style.border = "1px solid red";
+        document.getElementById('qtyFeedback1').innerText = 'Quantity is required';
+      }else{
+        document.getElementById('quantity1').style.border = "";
+        document.getElementById('qtyFeedback1').innerText = '';
+      }
+    }
+
+ 
+  </script>
 
   <!-- end model of display product -->
 
@@ -192,11 +418,20 @@
 
         </div>
         <script>
-          $(document).ready(function() {
-            // Initialize DataTable
-            $('#producttable').DataTable();
-          });
-            getProducts();
+
+            $(document).ready(async ()=>{
+              const data = await getProducts();
+              
+              if(data){
+                $('#producttable').DataTable({
+                  columnDefs: [
+                      { targets: [6,7,8,9], orderable: false }
+                  ]
+                });
+              }
+              
+            })
+
             async function getProducts(){
               const resProduct = await fetch("/getproduct",{
                 method: 'GET', // or 'POST', 'PUT', etc. depending on your endpoint
@@ -207,7 +442,7 @@
 
               const products = await resProduct.json();
 
-              let html = `<table class='table mt-5' id='producttable'><thead><th>No.</th><th>Product Name</th><th>Category Name</th><th>Price</th><th>Quantity</th><th>Discount</th><th>Picture</th><th>Edit</th><th>Delete</th></thead><tbody>`;
+              let html = `<table class='table mt-5' id='producttable'><thead><th>No.</th><th>Product Name</th><th>Category Name</th><th>Price</th><th>Quantity</th><th>Discount</th><th>Picture</th><th>View</th><th>Edit</th><th>Delete</th></thead><tbody>`;
 
               let no = 1;
               
@@ -220,6 +455,9 @@
                     <td>${item.quantity}</td>
                     <td>${item.discount}</td>
                     <td><img src='${item.product_picture}' height='50px' width='50px'/></td>
+                    <td>
+                      <button class='btn btn-dark' onclick='viewProducts(${JSON.stringify(item)})' data-bs-toggle="modal" data-bs-target="#viewProduct"><i class="bi bi-eye-fill"></i></button>
+                    </td>
                     <td class=''>
                     <button class='btn btn-dark' onclick='editProducts(${JSON.stringify(item)})' data-bs-toggle="modal" data-bs-target="#editproduct"><i class="bi bi-pencil-square"></i></button>
                     </td>
@@ -233,7 +471,29 @@
 
               document.getElementById('root').innerHTML = html;
 
-              $('#producttable').DataTable();
+              return true;
+              
+            }
+
+            function viewProducts(data) {
+
+                let html = `
+                  <center>
+                    <img src='${data.product_picture}' height="100px" width="150px"/>
+                  </center>
+                  <hr/>
+                  <div>
+                    <p class='border bg-primary text-light rounded-2 p-1'>Product Name :-   <b>${data.productName}</b></p>
+                    <p class='border bg-primary text-light rounded-2 p-1'>category Name :-   <b>${data.categoryName}</b></p>
+                    <p class='border bg-primary text-light rounded-2 p-1'>Discount :-   <b>${data.discount}%</b></p>
+                    <p class='border bg-primary text-light rounded-2 p-1'>Product effective price :-  <strike>${data.price}</strike> <b>₹${(data.price-((data.price * data.discount)/100)).toFixed(2)}</b></p>
+                    <p class='border bg-primary text-light rounded-2 p-1'>Available Quantity :-   <b>${data.quantity}</b></p>
+                  </div>
+                
+                `
+
+                document.getElementById('displaySingleProduct').innerHTML = html;
+
             }
 
             async function deleteProduct(id){
@@ -427,16 +687,21 @@
   <!-- <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a> -->
 
   <!-- Vendor JS Files -->
-  <script src="assets/vendor/apexcharts/apexcharts.min.js"></script>
-  <script src="assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
-  <script src="assets/vendor/chart.js/chart.umd.js"></script>
-  <script src="assets/vendor/echarts/echarts.min.js"></script>
-  <script src="assets/vendor/quill/quill.min.js"></script>
-  <script src="assets/vendor/tinymce/tinymce.min.js"></script>
-  <script src="assets/vendor/php-email-form/validate.js"></script>
+  <div>
+    <!-- Vendor JS Files -->
+    <script src="assets/vendor/apexcharts/apexcharts.min.js"></script>
+    <script src="assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="assets/vendor/chart.js/chart.umd.js"></script>
+    <script src="assets/vendor/echarts/echarts.min.js"></script>
+    <script src="assets/vendor/quill/quill.min.js"></script>
+    <script src="assets/vendor/simple-datatables/simple-datatables.js"></script>
+    <script src="assets/vendor/tinymce/tinymce.min.js"></script>
+    <script src="assets/vendor/php-email-form/validate.js"></script>
+    <script src="assets/js/main.js"></script>
+    <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.js"></script>
+  </div>
 
   <!-- Template Main JS File -->
-  <script src="assets/js/main.js"></script>
 
   <script>
 
@@ -452,6 +717,23 @@
       const discount = document.getElementById('discount').value;
       const file = document.getElementById('product_picture');
       const product_picture = file.files[0];
+
+      if(productName.trim() == '' || categoryName == '' || price == '' || quantity == '' || discount == '' || file == ''){
+        return Swal.fire({
+          icon: 'error',
+          title: 'Oops...',
+          text: 'Please fill all the fields',
+        })
+      }
+
+      const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg'];
+      if (!allowedTypes.includes(product_picture.type)) {
+          return Swal.fire({
+              title: "Oops...!",
+              text: "Only PNG, JPG, and JPEG file formats are allowed!",
+              icon: "error"
+          });
+      }
 
       const formData = new FormData();
       formData.append('productName',productName);
@@ -648,124 +930,3 @@
 
 </body>
 </html>
-
-<!-- // End of the category function
-// start the validation for add product 
-// ---------------------------------------------------------------
-
-//   document.addEventListener("DOMContentLoaded", function () {
-//   const productNameInput = document.getElementById("productName");
-//   const categoryNameInput = document.getElementById("categoryName");
-//   const priceInput = document.getElementById("price");
-//   const quantityInput = document.getElementById("quantity");
-//   const discountInput = document.getElementById("discount");
-
-//   productNameInput.addEventListener("keypress", function () {
-//     validateProductName();
-//   });
-
-//   categoryNameInput.addEventListener("blur", function () {
-//     validateCategoryName();
-//   });
-
-//   priceInput.addEventListener("blur", function () {
-//     validatePrice();
-//   });
-
-//   quantityInput.addEventListener("blur", function () {
-//     validateQuantity();
-//   });
-
-//   discountInput.addEventListener("blur", function () {
-//     validateDiscount();
-//   });
-
-//   function validateProductName() {
-//     const productNameValue = productNameInput.value.trim();
-//     if (!productNameValue) {
-//       productNameInput.classList.add("is-invalid");
-//       document.getElementById("productNameFeedback").textContent = "Product name is required.";
-//     } else if (/[^a-zA-Z0-9 ]/.test(productNameValue)) {
-//       productNameInput.classList.add("is-invalid");
-//       document.getElementById("productNameFeedback").textContent = "Product name should only contain letters, numbers, or spaces.";
-//     } else {
-//       productNameInput.classList.remove("is-invalid");
-//       productNameInput.classList.add("is-valid");
-//       document.getElementById("productNameFeedback").textContent = "";
-//     }
-//   }
-
-//   function validateCategoryName() {
-//     const categoryNameValue = categoryNameInput.value.trim();
-//     if (!categoryNameValue) {
-//       categoryNameInput.classList.add("is-invalid");
-//       document.getElementById("categoryNameFeedback").textContent = "Category name is required.";
-//     } else if (/[^a-zA-Z0-9 ]/.test(categoryNameValue)) {
-//       categoryNameInput.classList.add("is-invalid");
-//       document.getElementById("categoryNameFeedback").textContent = "Category name should only contain letters, numbers, or spaces.";
-//     } else {
-//       categoryNameInput.classList.remove("is-invalid");
-//       categoryNameInput.classList.add("is-valid");
-//       document.getElementById("categoryNameFeedback").textContent = "";
-//     }
-//   }
-
-//   function validatePrice() {
-//     const priceValue = parseFloat(priceInput.value);
-//     if (isNaN(priceValue) || priceValue < 0) {
-//       priceInput.classList.add("is-invalid");
-//       document.getElementById("priceFeedback").textContent = "Price should be a non-negative number.";
-//     } else {
-//       priceInput.classList.remove("is-invalid");
-//       priceInput.classList.add("is-valid");
-//       document.getElementById("priceFeedback").textContent = "";
-//     }
-//   }
-
-//   function validateQuantity() {
-//     const quantityValue = parseInt(quantityInput.value);
-//     if (isNaN(quantityValue) || quantityValue < 0) {
-//       quantityInput.classList.add("is-invalid");
-//       document.getElementById("quantityFeedback").textContent = "Quantity should be a non-negative integer.";
-//     } else {
-//       quantityInput.classList.remove("is-invalid");
-//       quantityInput.classList.add("is-valid");
-//       document.getElementById("quantityFeedback").textContent = "";
-//     }
-//   }
-
-//   function validateDiscount() {
-//     const discountValue = parseFloat(discountInput.value);
-//     if (isNaN(discountValue) || discountValue < 0) {
-//       discountInput.classList.add("is-invalid");
-//       document.getElementById("discountFeedback").textContent = "Discount should be a non-negative number.";
-//     } else {
-//       discountInput.classList.remove("is-invalid");
-//       discountInput.classList.add("is-valid");
-//       document.getElementById("discountFeedback").textContent = "";
-//     }
-//   }
-
-//   document.getElementById("productForm").addEventListener("submit", function (event) {
-//     event.preventDefault();
-//     validateProductName();
-//     validateCategoryName();
-//     validatePrice();
-//     validateQuantity();
-//     validateDiscount();
-
-//     // If all inputs are valid, you can proceed with form submission
-//     if (!productNameInput.classList.contains("is-invalid") &&
-//       !categoryNameInput.classList.contains("is-invalid") &&
-//       !priceInput.classList.contains("is-invalid") &&
-//       !quantityInput.classList.contains("is-invalid") &&
-//       !discountInput.classList.contains("is-invalid")) {
-//       // Perform form submission here
-//       console.log("Form submitted successfully!");
-//     } else {
-//       console.log("Form validation failed. Please check the fields.");
-//     }
-//   });
-// });
-
-// end the add product validation -->

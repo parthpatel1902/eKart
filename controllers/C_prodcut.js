@@ -9,6 +9,9 @@ const order = require('../model/M_order');
 const user = require('../model/M_user');
 const address = require('../model/M_address');
 
+const { STRIPE_PUBLISHABLE_KEY, STRIPE_SECRET_KEY } = process.env;
+const stripe = require('stripe')(STRIPE_SECRET_KEY)
+
 // for the product category
 const addCategory = async(req,res)=>{
 
@@ -51,18 +54,25 @@ const editCategory = async(req,res)=>{
         const {categoryName,id} = req.body;
 
         const resAvl = await categroy.findOne({categoryName:categoryName});
-
+        
         if(resAvl && resAvl._id != id){
             return errorRes(res, 400, "Category already exist");
         }
+        
+        const oldName = await categroy.findOne({_id:id},{categoryName:1,_id:0});
 
         const res_edit = await categroy.findByIdAndUpdate({ _id: id },{categoryName:categoryName}, { new: true });
-
+    
         if(res_edit){
+    
+            await product.updateMany({categoryName: oldName.categoryName},{$set:{categoryName:categoryName}});
+    
             return res.json({success:true});
         }else{
             return errorRes(res, 500, "Some Internal Error");
         }
+
+        
 
     } catch (error) {
         console.log("Error to edit category function",error);
@@ -75,9 +85,14 @@ const editCategory = async(req,res)=>{
 const removeCategory = async(req,res)=>{
     const id = req.query.id;
 
-    const resRemoveCategory = await categroy.findByIdAndUpdate({_id:id},{isDelete:true},{ new: true });
+    const oldName = await categroy.findOne({_id:id},{categoryName:1,_id:0});
 
+    const resRemoveCategory = await categroy.findByIdAndUpdate({_id:id},{isDelete:true},{ new: true });
+    
     if(removeCategory){
+        
+        await product.updateMany({categoryName: oldName.categoryName},{$set:{isDelete:true}});
+
         res.json({success:true});
     }
 }
@@ -385,6 +400,121 @@ const addorder = async(req,res)=>{
     }
 }
 
+const stripePayment = async(req,res)=>{
+    try {
+        const userId = req.user.id;
+        const {pid} = req.body;
+
+        
+        const order_personName = await user.findOne({_id:req.user.id},{_id:0,name:1});
+
+        const AddressId = await address.findOne({userId:req.user.id},{_id:1});
+
+        const cartRes = await cart.aggregate([
+            {
+              $match: {
+                userId: req.user.id,
+                isPurchased:false
+              }
+            },
+            {
+              $project: {
+                _id: 1,
+                subtotal: { $multiply: ["$price", "$quantity"] },
+                productId:1,
+                quantity:1
+              }
+            }
+        ])
+
+        let amount = 0;
+        
+        const cartId = [];
+
+        const minusQty = [];
+
+        cartRes.map((item)=>{
+            amount = amount + item.subtotal;
+            cartId.push(item._id);
+            minusQty.push({productId:item.productId,quantity:item.quantity});
+        })
+
+        const userAddress = await address.findOne({userId:userId});
+        const userDetails = await user.findOne({_id:userId});
+         
+        stripe.customers.create({
+            email: userDetails.email,
+            source: pid,
+            name: userDetails.name,
+            address: {
+                line1:userAddress.street + "," + userAddress.area + ",",
+                city:userAddress.city,
+                state:userAddress.state,
+                postal_code:userAddress.pincode,
+                country: 'India',
+            }
+        })
+        .then((customer) => {
+            return stripe.charges.create({
+                amount: amount*100,     // amount will be amount*100
+                description: "Ecommerc site",
+                currency: 'INR',
+                customer: customer.id
+            });
+        })
+        .then((charge) => {
+            console.log(charge);
+            const insert_data = {
+                order_personId:req.user.id,
+                order_personName:order_personName.name,
+                cartId:cartId,
+                AddressId:AddressId._id,
+                paymentMode: "Online",
+                amount:amount,
+                receipt_url:charge.receipt_url,
+                createdAt:new Date(),
+            }
+    
+            const res_add = new order(insert_data);
+    
+            res_add.save()
+            .then(async(result) => {
+    
+                await cart.updateMany({_id:{$in:cartId}},{$set:{isPurchased:true}});
+    
+                minusQty.map(async(item)=>{
+                    await product.updateOne({_id:item.productId},{ $inc: { quantity: -item.quantity } } )
+                })
+    
+                return res.json({success:true,data:res_add});
+            })
+            .catch((error) => {
+                console.log("Error >>>>> ", error.message);
+                return errorRes(res, 500, "Some Internal Error");
+            });
+    
+        })
+        .catch((err) => {
+            console.log(err);
+        });
+
+    } catch (error) {
+        console.log("Error from the stripePayment function >>>>>",error);
+        return errorRes(res,500,"some internal error");
+    }
+}
+
+
+async function getTransactions() {
+    try {
+      const transactions = await stripe.balanceTransactions.list({ limit: 10 });
+      console.log(transactions.data);
+    } catch (error) {
+      console.error('Error retrieving transactions:', error);
+    }
+}
+  
+// getTransactions();
 
 
 module.exports = {
@@ -402,5 +532,6 @@ module.exports = {
     editCartItem,
     deletedProducts,
     retriveProducts,
-    addorder
+    addorder,
+    stripePayment
 }

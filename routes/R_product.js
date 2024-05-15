@@ -25,6 +25,7 @@ router.patch("/editcart",multipartMiddleware,productController.editCartItem);
 
 // for order model
 router.post("/order",auth.tokenCheck,multipartMiddleware,productController.addorder);
+router.post("/payment",auth.tokenCheck,multipartMiddleware,productController.stripePayment);
 
 
 module.exports = router;

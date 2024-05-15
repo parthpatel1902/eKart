@@ -32,6 +32,10 @@ const orderSchema = new mongoose.Schema({
         type:Date,
         default:Date.now
     },
+    receipt_url:{
+        type:String,
+        default:''
+    },
     isDelete:{
         type:Boolean,
         default:false

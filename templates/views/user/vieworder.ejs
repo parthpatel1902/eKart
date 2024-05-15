@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <%- include('../../partials/link.ejs') %>
+    <style>        
+    </style>
+    <script>
+        if(!localStorage.getItem('token')){
+            window.location.href = '/'
+        }
+    </script>
+</head>
+<body style="margin-top: 100px;">
+    <%- include('../../partials/navbar.ejs') %>
+    <div>
+        <div class="container mt-5">
+            <div class="jumbotron">
+            
+            </div>
+        </div>
+    </div>
+    <script>
+    
+    </script>
+</body>
+</html>

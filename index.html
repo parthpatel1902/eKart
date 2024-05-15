@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Find My Location</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="mb-4">Find My Location</h1>
+        <button id="getLocationBtn" class="btn btn-primary">Get My Location</button>
+        <div id="locationInfo" class="mt-4"></div>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        document.getElementById('getLocationBtn').addEventListener('click', getLocation);
+
+        function getLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(showPosition);
+            } else {
+                alert("Geolocation is not supported by this browser.");
+            }
+        }
+
+        function showPosition(position) {
+            var latitude = position.coords.latitude;
+            var longitude = position.coords.longitude;
+            var locationInfo = document.getElementById('locationInfo');
+            locationInfo.innerHTML = '<strong>Latitude:</strong> ' + latitude + '<br><strong>Longitude:</strong> ' + longitude;
+        }
+
+    </script>
+</body>
+</html>

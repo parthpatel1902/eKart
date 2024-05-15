@@ -279,7 +279,7 @@ const sendEmailPassword = async(email,password,name)=>{
                 </tr>
             </table>
             <p>Please keep this information secure and do not share it with anyone.</p>
-            <p>If you have any questions or concerns, feel free to <a href="[Your Contact Page URL]" class="btn">Contact Us</a>.</p>
+            <p>you can login into the site via the following login link <a href="http://192.168.29.58:9999/" class="btn btn-primary">Login</a>.</p>
             <p>Best regards,<br>Your Company Name</p>
         </div>
     </div>
@@ -446,8 +446,6 @@ const updateUser = async(req,res)=>{
         const id = req.params.id;
 
         const {email,password,name} = req.body; 
-
-        sendEmailPassword(email,password,name);
 
         if(req.file){
             const photoName = await user.findOne({_id:id},{_id:0,userProfile:1})

@@ -27,7 +27,13 @@ router.get("/viewcart",async(req,res)=>{
 })
 
 router.get("/order",async(req,res)=>{
-    res.render("user/placeorder");
+    res.render("user/placeorder",{
+        publickey:process.env.STRIPE_PUBLISHABLE_KEY
+    });
+})
+
+router.get("/vieworder",async(req,res)=>{
+    res.render("user/viewOrder");
 })
 
 module.exports = router

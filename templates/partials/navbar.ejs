@@ -25,21 +25,44 @@
             >Home</a
           >
         </li>
-        <li class="nav-item">
+        <!-- <li class="nav-item">
           <a class="nav-link text-light" href="/about">About</a>
-        </li>
+        </li> -->
         <li class="nav-item">
-          <a class="nav-link text-light" href="/viewProduct">Products</a>
+          <a class="nav-link text-light" id="viewProduct">Products</a>
         </li>
+
+        <script>
+            document.getElementById('viewProduct').addEventListener('click', function(event) {
+              if (!localStorage.getItem('token')) {
+                event.preventDefault();
+                $('#loginModel').modal('show');
+              } else {
+                // Redirect to view product page if logged in
+                window.location.href = '/viewproduct';
+              }
+            });
+        </script>
+
       </ul>
       <div class="d-flex">
-        <button type="button" class="btn btn-light position-relative" onclick="location.href='/viewcart'">
-          <i class="fa fa-shopping-cart" aria-hidden="true"></i>
-          <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="numberCart">
-            0
-          </span>
+        <div id="shoppingCart">
+          
+        </div>
         </button>
         <script>
+
+          if(localStorage.getItem('token')){
+            document.getElementById('shoppingCart').innerHTML = `
+            <button type="button" class="btn btn-light position-relative" onclick="location.href='/viewcart'">
+            <i class="fa fa-shopping-cart" aria-hidden="true"></i>
+            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="numberCart">
+              0
+            </span>
+            `;
+          }
+
+
           numberOfCart();
           async function numberOfCart(){
               const token = localStorage.getItem('token');
@@ -51,7 +74,12 @@
 
                 const resjson = await data.json();
 
-                $("#numberCart").text(resjson.numberCart);
+                if(!resjson.success){
+                  document.getElementById('shoppingCart').innerHTML = '';
+                }else{
+                  $("#numberCart").text(resjson.numberCart);
+                }
+
             }
         </script>
         &nbsp;&nbsp;&nbsp;&nbsp;
@@ -152,6 +180,7 @@
               <img src='${resjson.data[0].userProfile}' height='40px' width='50px' style='border-radius: 50%;cursor: pointer;' onclick="toggleDropdown()"/>
               <div id="dropdownMenu" class="dropdown-menu" style="display: none; position: absolute; top: 100%; right: 0;">
                 <a class="dropdown-item" href="/userProfile">View Profile</a>
+                <a class="dropdown-item" href="/vieworder">Orders</a>
                 <a class="dropdown-item" href="#" onclick='logout(${JSON.stringify(sendData)})'>Logout</a>
               </div>
             </div>
@@ -169,33 +198,51 @@
       }
     }
 
-    async function logout(data) {
+    function logout(data) {
+
+      return Swal.fire({
+        title: "Are you sure to logout?",
+        icon: "warning",
+        confirmButtonText: "Yes, logout",
+        confirmButtonColor: "red",
+        showCancelButton: true,
+      }).then(async(result) => {
         localStorage.removeItem('token');
         const logintime = localStorage.getItem('logintime');
         const logouttime = `${currentHour}:${currentMinute}:${currentSecond}`;
-
+  
         const apiData = new FormData();
-
+  
         apiData.append("name", data.name);
         apiData.append("email", data.email);
         apiData.append("logintime", logintime);
         apiData.append("logouttime", logouttime);
         apiData.append("adminId",data.adminId)
-
+  
         const resAddActivity = await fetch('/addactivity',{
           method:'POST',
           body:apiData
         })
-
+  
         const rejson = await resAddActivity.json();
-
-        console.log(rejson);
- 
+  
         if(rejson.success){
           localStorage.removeItem('logintime');
           localStorage.removeItem('token');
-          location.reload();
+
+          Swal.fire({
+            title: "Logout!",
+            text: "Your are successfully logout.",
+            icon: "success"
+          }).then(()=>{
+            location.href = "/";
+          })
+
         }
+
+
+      })
+
 
     }
 

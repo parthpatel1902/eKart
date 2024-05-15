@@ -206,25 +206,6 @@
           <div id="addressError1" class="text-danger"></div>
         </div>
         <div class="mb-3">
-          <label for="password" class="form-label">Password</label>
-          <div class="input-group">
-              <input
-                  type="password"
-                  class="form-control"
-                  id="password"
-                  name="password"
-                  onchange="validatePassword()"
-                  onkeyup="validatePassword()"
-                  onkeydown="validatePassword()"
-                  placeholder="enter the password"
-              />
-              <button class="btn btn-outline-secondary" type="button" id="togglePasswordButton" onclick="togglePasswordVisibility()">
-                  Show
-              </button>
-          </div>
-          <div id="passwordError" class="text-danger"></div>
-        </div>
-        <div class="mb-3">
           <label for="userprofile" class="form-label">Select user  profile picture :</label>
           <input
             type="file"
@@ -284,54 +265,59 @@
   
     $(document).ready(async()=>{
       const token = localStorage.getItem("token");  
-      let adduser = `<table class='table-responsive' id='userTable'><thead><th>No</th><th>Name</th><th>Email</th><th>Mobile</th><th>gender</th><th>address</th><th>Password</th><th>Picture</th><th>Update</th><th>Delete</th></thead><tbody>`
+      let adduser = `<table class='table-responsive' id='userTable'><thead><th>No</th><th>Name</th><th>Email</th><th>Mobile</th><th>gender</th><th>address</th><th>Picture</th><th>Update</th><th>Delete</th></thead><tbody>`
 
-        try {
-            const response = await fetch('/displayusers', {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-            });
+      try {
+          const response = await fetch('/displayusers', {
+              method: 'GET',
+              headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${token}`
+              },
+          });
 
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
-            const data = await response.json();
-
-            let number = 1;
-
-            data.map((item)=>{
-
-                const update_data = {
-                    id: item._id,
-                    name:item.name,
-                    email: item.email,
-                    mobile:item.mobile,
-                    gender:item.gender,
-                    address:item.address,
-                    password:item.password,
-                    userProfile:item.userProfile
-                };
-
-                adduser += `<tr><td class='text-center'>${number++}</td><td>${item.name}</td><td>${item.email}</td><td>${item.mobile}</td><td>${item.gender}</td><td>${item.address}</td><td>${item.password}</td><td><img src="${item.userProfile}" height="60px" width="80px"></td>
-                  <td class='text-center'>
-                  <button class='btn btn-dark'><i class="bi bi-pencil-square" onclick='updateRecord(${JSON.stringify(update_data)})' data-bs-toggle="modal" data-bs-target="#updateusermodel"></i></button>
-                  </td>
-                  <td class='text-center'>
-                  <button class='btn btn-dark' onclick="deleteUser('${item._id}')"><i class="bi bi-trash3-fill"></i></button>
-                  </td></tr>`
-            })
-
-          }catch(error){
-            console.log("Error from the find the admin profile picture : ",error);
+          if (!response.ok) {
+              throw new Error('Network response was not ok');
           }
-      
+          const data = await response.json();
+
+          let number = 1;
+
+          data.map((item)=>{
+
+              const update_data = {
+                  id: item._id,
+                  name:item.name,
+                  email: item.email,
+                  mobile:item.mobile,
+                  gender:item.gender,
+                  address:item.address,
+                  password:item.password,
+                  userProfile:item.userProfile
+              };
+
+              adduser += `<tr><td class='text-center'>${number++}</td><td>${item.name}</td><td>${item.email}</td><td>${item.mobile}</td><td>${item.gender}</td><td>${item.address}</td><td><img src="${item.userProfile}" height="60px" width="80px"></td>
+                <td class='text-center'>
+                <button class='btn btn-dark'><i class="bi bi-pencil-square" onclick='updateRecord(${JSON.stringify(update_data)})' data-bs-toggle="modal" data-bs-target="#updateusermodel"></i></button>
+                </td>
+                <td class='text-center'>
+                <button class='btn btn-dark' onclick="deleteUser('${item._id}')"><i class="bi bi-trash3-fill"></i></button>
+                </td></tr>`
+          })
+
+      } catch(error){
+          console.log("Error from the find the admin profile picture : ",error);
+      }
+
       adduser += `</tbody></table>`;
       $("#root").html(adduser);
-      $('#userTable').DataTable();
+      $('#userTable').DataTable({
+        columnDefs: [
+            { targets: [6,7,8], orderable: false }
+        ]
+      });
     })
+
 
     function updateRecord(data){
       document.getElementById('userId').value = data.id
@@ -340,22 +326,8 @@
       document.getElementById('mobile1').value = data.mobile;
       document.getElementById(`${data.gender}1`).setAttribute('checked', 'true');
       document.getElementById('address1').value = data.address;
-      document.getElementById('password').value = data.password;
       document.getElementById('profilephoto').src = data.userProfile;
     }
-
-    function togglePasswordVisibility() {
-        const passwordField = document.getElementById('password');
-        const togglePasswordButton = document.getElementById('togglePasswordButton');
-        
-        if (passwordField.type === 'password') {
-            passwordField.type = 'text';
-            togglePasswordButton.textContent = 'Hide';
-        } else {
-            passwordField.type = 'password';
-            togglePasswordButton.textContent = 'Show';
-        }
-      }
 
     function deleteUser(id){
       try {
@@ -415,11 +387,20 @@
       const file = fileInput.files[0];
 
       if(name == "" || email == "" || mobile == "" || gender == ""  || address == "" || !file){
-            return Swal.fire({
-                title: "Oops...!",
-                text: "All fields are required!",
-                icon: "error"
-            });
+        return Swal.fire({
+          title: "Oops...!",
+          text: "All fields are required!",
+          icon: "error"
+        });
+      }
+
+      const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg'];
+      if (!allowedTypes.includes(file.type)) {
+          return Swal.fire({
+              title: "Oops...!",
+              text: "Only PNG, JPG, and JPEG file formats are allowed!",
+              icon: "error"
+          });
       }
 
       const apiData = new FormData();
@@ -465,22 +446,21 @@
 
     // VALIDATION FOR ADD NEW USER
 
-    function validateName() {
-        const name = document.getElementById("name").value;
-        const nameError = document.getElementById("nameError");
+  function validateName() {
+    const name = document.getElementById("name").value;
+    const nameError = document.getElementById("nameError");
 
-        if (name === "") {
-          nameError.innerHTML = "Name is Required.";
-          document.getElementById('name').style.border = "2px solid red";
-        } else if (name.length < 3 || !/^[a-zA-Z]+$/.test(name)) {
-          nameError.textContent =
-            "Name must be at least 3 characters long and contain only letters.";
-            document.getElementById("name").style.border = "2px solid red";
-        } else {
-          nameError.textContent = "";
-          document.getElementById("name").style.border = "";
-        }
+    if (name.trim() === "") {
+        nameError.textContent = "Name is Required.";
+        document.getElementById('name').style.border = "2px solid red";
+    } else if (name.trim().length < 3 || !/^[a-zA-Z\s]+$/.test(name.trim())) {
+        nameError.textContent = "Name must be at least 3 characters long and contain only letters.";
+        document.getElementById("name").style.border = "2px solid red";
+    } else {
+        nameError.textContent = "";
+        document.getElementById("name").style.border = "";
     }
+  }
 
     function validateEmail() {
         const emailInput = document.getElementById("email");
@@ -592,13 +572,12 @@
       }
     }
 
-    function restrictInputName(event){
-        const keyPressed = event.key;
-        if(!/^[a-zA-Z]+$/.test(keyPressed) && keyPressed !== "ArrowLeft" && keyPressed !== "ArrowRight" )
-        {
+    function restrictInputName(event) {
+      const keyPressed = event.key;
+        if (!/^[a-zA-Z\s]+$/.test(keyPressed) && keyPressed !== "ArrowLeft" && keyPressed !== "ArrowRight") {
           event.preventDefault();
         }
-      }
+    }
 
     // VALIDATION FOR ADD NEW USER
     
@@ -724,7 +703,6 @@
       const email = document.getElementById('email1').value;
       const mobile = document.getElementById('mobile1').value;
       const address  = document.getElementById('address1').value;
-      const password = document.getElementById('password').value;
       const userProfile =  document.getElementById('userprofile1');
       const file = userProfile.files[0];
       let gender;
@@ -734,7 +712,7 @@
         gender = "female";
       }
 
-      if(name == "" || email == "" || mobile == "" || address == "" || password == "" ||  !gender ){
+      if(name == "" || email == "" || mobile == "" || address == "" || !gender ){
         return Swal.fire({
           icon: 'error',
           title: 'Oops...',
@@ -749,14 +727,12 @@
         apiData.append('mobile', mobile);
         apiData.append('gender', gender);
         apiData.append('address', address);
-        apiData.append('password', password);
       }else{
         apiData.append('name',name);
         apiData.append('email', email);
         apiData.append('mobile', mobile);
         apiData.append('gender', gender);
         apiData.append('address', address);
-        apiData.append('password', password);
         apiData.append('userProfile',file);
       }
 

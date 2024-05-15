@@ -83,6 +83,15 @@
             const token = document.getElementById('token').value;
             const imageurl = document.getElementById('imageurl').value;
         
+            if(name == '' || token == '' || imageurl == ''){
+                return Swal.fire({
+                    icon: 'error',
+                    title: 'Oops...',
+                    text: 'Please fill all the fields',
+                })
+            }
+
+
             const formData = new FormData();
             formData.append('name',name);
             formData.append('token',token);
