@@ -118,14 +118,19 @@
                 <div class="d-grid gap-2">
                 `;
 
+                  if(product.quantity < 1){
+                    card += ` <div id='${product._id}'>
+                        <button class="btn btn-primary" style='width:100%' type="button"<i class="bi bi-bell-fill"></i> Notify me</button>
+                      </div>`
+                  }else{
                     if(ProductsID.includes(product._id)){
-
+  
                       resProductCheckJSON.data.map((item)=>{
                         if(item.productId === product._id){
                           cartId = item._id;
                         }
                       })
-
+  
                       card += `
                       <div id='${product._id}'>
                       <button onclick='removeToCart(${JSON.stringify({buttonId:product._id,cartId:cartId,item:product})})' class='btn btn-warning' style='width:100%'>Remove from cart</button>
@@ -137,6 +142,8 @@
                       </div>
                       `
                     }
+                  }
+
                    card += `
                 </div>
             </div>

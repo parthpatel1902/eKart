@@ -4,7 +4,7 @@
       ><img
         width="40"
         height="40"
-        src="https://img.icons8.com/3d-fluency/94/group--v1.png"
+        src="cart.png"
         alt="globe-africa"
     /></a>
     <button
@@ -199,52 +199,52 @@
     }
 
     function logout(data) {
-
       return Swal.fire({
         title: "Are you sure to logout?",
         icon: "warning",
         confirmButtonText: "Yes, logout",
         confirmButtonColor: "red",
         showCancelButton: true,
-      }).then(async(result) => {
-        localStorage.removeItem('token');
-        const logintime = localStorage.getItem('logintime');
-        const logouttime = `${currentHour}:${currentMinute}:${currentSecond}`;
-  
-        const apiData = new FormData();
-  
-        apiData.append("name", data.name);
-        apiData.append("email", data.email);
-        apiData.append("logintime", logintime);
-        apiData.append("logouttime", logouttime);
-        apiData.append("adminId",data.adminId)
-  
-        const resAddActivity = await fetch('/addactivity',{
-          method:'POST',
-          body:apiData
-        })
-  
-        const rejson = await resAddActivity.json();
-  
-        if(rejson.success){
-          localStorage.removeItem('logintime');
+      }).then(async (result) => {
+        if (result.isConfirmed) {
           localStorage.removeItem('token');
+          const logintime = localStorage.getItem('logintime');
+          const currentHour = new Date().getHours();
+          const currentMinute = new Date().getMinutes();
+          const currentSecond = new Date().getSeconds();
+          const logouttime = `${currentHour}:${currentMinute}:${currentSecond}`;
 
-          Swal.fire({
-            title: "Logout!",
-            text: "Your are successfully logout.",
-            icon: "success"
-          }).then(()=>{
-            location.href = "/";
-          })
+          const apiData = new FormData();
 
+          apiData.append("name", data.name);
+          apiData.append("email", data.email);
+          apiData.append("logintime", logintime);
+          apiData.append("logouttime", logouttime);
+          apiData.append("adminId", data.adminId);
+
+          const resAddActivity = await fetch('/addactivity', {
+            method: 'POST',
+            body: apiData
+          });
+
+          const rejson = await resAddActivity.json();
+
+          if (rejson.success) {
+            localStorage.removeItem('logintime');
+            localStorage.removeItem('token');
+
+            Swal.fire({
+              title: "Logout!",
+              text: "Your are successfully logged out.",
+              icon: "success"
+            }).then(() => {
+              location.href = "/";
+            });
+          }
         }
+      });
+}
 
-
-      })
-
-
-    }
 
 
     function login(){

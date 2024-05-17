@@ -9,6 +9,8 @@ const nodemailer = require('nodemailer');
 const userActivity = require('../model/M_useractivity');
 const XLSX = require('xlsx');
 const path = require('path');
+const order = require('../model/M_order');
+const cart = require('../model/M_cart');
 
 const addActivity = async(req,res)=>{
 
@@ -266,6 +268,16 @@ const changePassword = async (req,res)=>{
 
 }
 
+// for the usser oreders 
+
+const getOrders = async(req,res)=>{
+  const orderData = await order.find({order_personId: req.user.id})
+  .populate({
+    path: "cartId",
+    select: "productName categoryName price quantity product_picture"
+  }).exec();
+  return successRes(res,200,"Data:",orderData);
+}
 
 // for user full address
 
@@ -328,5 +340,5 @@ const editAddress = async(req,res)=>{
 }
 
 module.exports = {
-    addActivity,getActivity,getExcel,getCsv,userLogin,getUser,sendEmailForForgetPassword,forgetPassword,changePassword,addAddress,getAddress,editAddress
+    addActivity,getActivity,getExcel,getCsv,userLogin,getUser,sendEmailForForgetPassword,forgetPassword,changePassword,addAddress,getAddress,editAddress,getOrders
 }

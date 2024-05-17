@@ -63,5 +63,6 @@ router.post("/address", auth.tokenCheck,multipartMiddleware,userController.addAd
 router.get("/address",auth.tokenCheck,userController.getAddress);
 router.patch("/address",auth.tokenCheck,multipartMiddleware,userController.editAddress);
 
+router.get("/getorders",auth.tokenCheck,userController.getOrders);
 
 module.exports = router;

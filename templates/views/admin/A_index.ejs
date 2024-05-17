@@ -18,59 +18,126 @@
                 <!-- Customers Card -->
                 <div class="col-xxl-4 col-xl-12">
 
-                <div class="card info-card customers-card">
+                    <div class="card info-card customers-card">
 
-                    <div class="card-body">
-                    <h5 class="card-title">Total Users</h5>
+                        <div class="card-body">
+                        <h5 class="card-title">Total Users</h5>
 
-                    <div class="d-flex align-items-center">
-                        <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
-                        <i class="bi bi-people"></i>
+                        <div class="d-flex align-items-center">
+                            <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
+                            <i class="bi bi-people"></i>
+                            </div>
+                            <div class="ps-3">
+                            <h6 id="totalUser"></h6>
+                            </div>
                         </div>
-                        <div class="ps-3">
-                        <h6 id="totalUser"></h6>
-                        </div>
-                    </div>
 
-                    </div>
-                </div>
-                <div class="card info-card customers-card">
-
-                    <div class="card-body">
-                    <h5 class="card-title">Total Products</h5>
-
-                    <div class="d-flex align-items-center">
-                        <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
-                        <i class="bi bi-cart4"></i>
-                        </div>
-                        <div class="ps-3">
-                        <h6 id="totalproduct"></h6>
                         </div>
                     </div>
+                    <div class="card info-card customers-card">
 
-                    <script>
-                        async function getTotalProducts() {
+                        <div class="card-body">
+                        <h5 class="card-title">Total Products</h5>
+
+                        <div class="d-flex align-items-center">
+                            <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
+                            <i class="bi bi-cart4"></i>
+                            </div>
+                            <div class="ps-3">
+                            <h6 id="totalproduct"></h6>
+                            </div>
+                        </div>
+
+                        <script>
+                            async function getTotalProducts() {
+                                
+                                const resOfgetproduct = await fetch("/getproduct",{
+                                    method:"GET",
+                                    headers:{
+                                        "Authorization":`Bearer ${localStorage.getItem('token')}`
+                                    }
+                                });
+
+                                const dataJSON = await resOfgetproduct.json();
+
+                                $("#totalproduct").text(dataJSON.data.length)
+
+                            }
+
+                            getTotalProducts();
+                        </script>
+
+                        </div>
+                    </div>
+                    <div class="card info-card customers-card">
+
+                        <div class="card-body">
+                        <h5 class="card-title">Total Selling</h5>
+
+                        <div class="d-flex align-items-center">
+                            <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
+                            <i class="bi bi-currency-dollar"></i>
+                            </div>
+                            <div class="ps-3">
+                            <h6 id="totalSell"></h6>
+                            </div>
+                        </div>
+                        <script>
+                            async function totalSelling() {
+                                
+                                const resOftotalselling = await fetch("/totalSelling",{
+                                    method:"GET",
+                                    headers:{
+                                        "Authorization":`Bearer ${localStorage.getItem('token')}`
+                                    }
+                                });
+
+                                const dataJSON = await resOftotalselling.json();
+
+                                const indianRupee = formatToIndianCurrency((dataJSON.data[0].totalSellingAmount).toFixed(2))
+
+                                $("#totalSell").text(indianRupee)
+
+                            }
+                            totalSelling();
                             
-                            const resOfgetproduct = await fetch("/getproduct",{
-                                method:"GET",
-                                headers:{
-                                    "Authorization":`Bearer ${localStorage.getItem('token')}`
+                            function formatToIndianCurrency(num) {
+                                function numberWithCommas(x) {
+                                    var parts = x.toString().split(".");
+                                    parts[0] = parts[0].replace(/\B(?=(\d{2})+(?!\d))/g, ",");
+                                    return parts.join(".");
                                 }
-                            });
 
-                            const dataJSON = await resOfgetproduct.json();
+                                // Convert the number to string and split into integer and decimal parts
+                                let [integerPart, decimalPart] = num.toString().split(".");
 
-                            $("#totalproduct").text(dataJSON.data.length)
+                                // Format the integer part with Indian number system commas
+                                let formattedIntegerPart = numberWithCommas(integerPart);
 
-                        }
+                                // Reattach the decimal part if it exists
+                                let formattedNumber = decimalPart ? formattedIntegerPart + "." + decimalPart : formattedIntegerPart;
 
-                        getTotalProducts();
-                    </script>
+                                // Convert number to lakhs or crores
+                                let value = parseFloat(num);
+                                if (value >= 1e7) {
+                                    // Convert to crores
+                                    let croreValue = (value / 1e7).toFixed(2);
+                                    return `${croreValue} crores`;
+                                } else if (value >= 1e5) {
+                                    // Convert to lakhs
+                                    let lakhValue = (value / 1e5).toFixed(2);
+                                    return `${lakhValue} lakhs`;
+                                } else {
+                                    return formattedNumber;
+                                }
+                            }
+                        
+                        </script>
 
+                        </div>
                     </div>
-                </div>
-
                 </div><!-- End Customers Card -->
+                
             </div>
         </div>  
       

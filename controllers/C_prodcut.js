@@ -8,6 +8,7 @@ const path = require('path');
 const order = require('../model/M_order');
 const user = require('../model/M_user');
 const address = require('../model/M_address');
+const puppeteer = require('puppeteer');
 
 const { STRIPE_PUBLISHABLE_KEY, STRIPE_SECRET_KEY } = process.env;
 const stripe = require('stripe')(STRIPE_SECRET_KEY)
@@ -505,16 +506,193 @@ const stripePayment = async(req,res)=>{
 }
 
 
-async function getTransactions() {
+const getOrderInvoice = async(req,res)=>{
     try {
-      const transactions = await stripe.balanceTransactions.list({ limit: 10 });
-      console.log(transactions.data);
+        
+        const orderId = req.query.id;
+
+        const invoiceData = {
+            companyLogo: 'http://localhost:9999/cart.png',
+        };
+
+        const orderData = await order.findOne({_id:orderId});
+
+        const orderdate = new Date(orderData.order_date);
+        const formattedDate = `${orderdate.getDate().toString().padStart(2, '0')}-${(orderdate.getMonth() + 1).toString().padStart(2, '0')}-${orderdate.getFullYear()}`;
+        const formattedTime = orderdate.toLocaleString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });         
+        invoiceData.invoiceDate = `${formattedDate} ${formattedTime}`;
+        
+        invoiceData.customerName = orderData.order_personName;
+
+        const mobile = await user.findOne({_id:orderData.order_personId},{_id:0,mobile:1})
+        invoiceData.mobile = mobile.mobile;
+
+        const deliveryAddress = await address.findOne({userId:orderData.order_personId});
+        invoiceData.deliveryAddress = `${deliveryAddress.building}, ${deliveryAddress.street}, ${deliveryAddress.area}, ${deliveryAddress.city}, ${deliveryAddress.state}, ${deliveryAddress.pincode}, Famous-${deliveryAddress.famousplace}`
+
+        const cartItems = await Promise.all(orderData.cartId.map(async (id) => {
+            const cartItem = await cart.findOne({_id: id}, {_id: 0, product_picture: 1, productName: 1, quantity: 1, price: 1});
+            return {name: cartItem.productName, image: `http://localhost:9999/${cartItem.product_picture}`, price: cartItem.price, quantity: cartItem.quantity};
+        }));
+
+        invoiceData.products = cartItems;
+        invoiceData.totalPrice = orderData.amount;
+        invoiceData.paymentMethod = orderData.paymentMode;
+        
+        const browser = await puppeteer.launch();
+        const page = await browser.newPage();
+
+        // Set content for PDF
+        const content = `
+            <html>
+            <head>
+                <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+                <style>
+                /* Custom styles */
+                body {
+                    font-family: Arial, sans-serif;
+                }
+                .invoice-header {
+                    margin-bottom: 20px;
+                }
+                .invoice-details p {
+                    margin-bottom: 5px;
+                }
+                .invoice-table th, .invoice-table td {
+                    vertical-align: middle;
+                }
+                .invoice-footer {
+                    margin-top: 20px;
+                }
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                <div class="row justify-content-between invoice-header mt-5 border p-2 text-primary shadow-sm" style="border-radius: 10px;">
+                    <div class="col-auto">
+                    <img src="${invoiceData.companyLogo}" alt="Company Logo" style="max-height: 50px;">
+                    </div>
+                    <div class="col-auto">
+                    <h1 class='ml-5'>The eKart Ltd</h1>
+                    </div>
+                </div>
+                <div class="invoice-details2" style="margin-right: 400px">
+                    <table class="table table-bordered shadow-sm">
+
+                        <tr><td><strong>Order Date:- </strong> <u> ${invoiceData.invoiceDate}</u></td></tr>
+                        <tr><td><strong>Customer Name:</strong>${invoiceData.customerName}</td></tr>
+                        <tr><td><strong>Mobile:</strong> ${invoiceData.mobile}</td></tr>
+                        <tr><td><strong>Delivery Address:</strong><span class='text-primary'> ${invoiceData.deliveryAddress}</span></td></tr>
+                    </table>
+                    </div>
+                <div class="invoice-body mt-4">
+                    <table class="table table-bordered shadow-sm">
+                    <thead>
+                        <tr>
+                        <th>No.</th>
+                        <th>Product Name</th>
+                        <th>Product Image</th>
+                        <th>Price</th>
+                        <th>Quantity</th>
+                        <th>Subtotal</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${invoiceData.products.map((product, index) => `
+                        <tr>
+                            <td>${index + 1}</td>
+                            <td>${product.name}</td>
+                            <td><img src="${product.image}" alt="${product.name}" style="max-height: 50px;"></td>
+                            <td> ₹${product.price}</td>
+                            <td>${product.quantity}</td>
+                            <td>${product.price * product.quantity}</td>
+                        </tr>
+                        `).join('')}
+                    </tbody>
+                    </table>
+                </div>
+                <div class="row justify-content-end invoice-footer">
+                    <div class="col-auto">
+                    <p class='border text-center rounded-2'><strong>Total Price:</strong>  ₹${invoiceData.totalPrice}</p>
+                    <p><strong>Payment Method:</strong> ${invoiceData.paymentMethod}</p>
+                    </div>
+                </div>
+                </div>
+            </body>
+            </html>
+        `;
+
+        await page.setContent(content);
+        await page.pdf({ path: `invoices/${orderId}-invoice.pdf`, format: 'A4' });
+        await browser.close();
+
+        const filePath = path.join(__dirname, `../invoices/${orderId}-invoice.pdf`);
+
+        res.download(filePath);
+
     } catch (error) {
-      console.error('Error retrieving transactions:', error);
+        console.log("Error from the getOrderInvoice >>> ",error);
+        return errorRes(res,500,"Some internal error");
     }
 }
-  
-// getTransactions();
+
+const getTransactionReceipt = async(req,res)=>{
+    try {
+        const orderId = req.query.id; 
+        const recUrl = await order.findOne({_id:orderId},{_id:0,receipt_url:1})
+        const browser = await puppeteer.launch();
+        const page = await browser.newPage();
+
+        await page.goto(recUrl.receipt_url, {
+            waitUntil: 'networkidle2',
+        });
+
+        await page.pdf({
+            path: `receipts/${orderId}-transactionreceipt.pdf`,
+            format: 'A4',
+            printBackground: true,
+        });
+
+        const filePath = path.join(__dirname, `../receipts/${orderId}-transactionreceipt.pdf`);
+
+        res.download(filePath);
+
+    } catch (error) {
+        console.log("Error from the getOrderInvoice >>> ",error);
+        return errorRes(res,500,"Some internal error");
+    }
+}
+
+const totalSelling = async(req,res)=>{
+    try {
+        const total =  await order.aggregate([
+            {
+              $match: {
+                isDelete: false,
+                order_status: "Delivered"
+              }
+            },
+            {
+              $group: {
+                _id: null,
+                totalSellingAmount: { $sum: "$amount" }
+              }
+            },
+            {
+              $project: {
+                _id: 0,
+                totalSellingAmount: 1
+              }
+            }
+          ]);
+
+        return res.json({success:true,data:total});
+          
+    } catch (error) {
+        console.log("Error from the totalSelling >>",error);
+        return errorRes(res,500,"Some Internal Error");
+    }
+}
 
 
 module.exports = {
@@ -533,5 +711,8 @@ module.exports = {
     deletedProducts,
     retriveProducts,
     addorder,
-    stripePayment
+    stripePayment,
+    getOrderInvoice,
+    getTransactionReceipt,
+    totalSelling
 }

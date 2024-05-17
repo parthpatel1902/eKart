@@ -5,7 +5,29 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
     <%- include('../../partials/link.ejs') %>
-    <style>        
+    <style>
+      #loader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+        #loader img {
+            width: 100px; /* Adjust the size as needed */
+            height: 100px; /* Adjust the size as needed */
+        }
+        body {
+            font-family: Arial, sans-serif;
+        }
+        .jumbotron {
+            background-color: #f8f9fa;
+        }      
     </style>
     <script>
         if(!localStorage.getItem('token')){
@@ -14,16 +36,167 @@
     </script>
 </head>
 <body style="margin-top: 100px;">
+    <div id="loader">
+      <img src="Spinner.gif" alt="Loading...">
+    </div>
     <%- include('../../partials/navbar.ejs') %>
     <div>
         <div class="container mt-5">
             <div class="jumbotron">
-            
+                <div class="container mt-5">
+                    <div class="col-md-12">
+                        <table class="table table-responsive bg-dark rounded">
+                        <thead>
+                            <tr>
+                            <th class="text-light">No</th>
+                            <th class="text-light">Person Name</th>
+                            <th class="text-light">Order Status</th>
+                            <th class="text-light">Amount</th>
+                            <th class="text-light">Payment Mode</th>
+                            <th class="text-light">Order Date</th>
+                            <th class="text-light">Action</th>
+                            <th class="text-light">Receipt</th>
+                            <th class="text-light">Invoice</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ordersTableBody">
+                            <!-- Data will be inserted here dynamically -->
+                        </tbody>
+                        </table>
+                    </div>
+
+                </div>
+                  
+                  
+                </div>
             </div>
         </div>
-    </div>
+        <!-- Bootstrap Modal for displaying cart details -->
+
+        <div class="modal fade" id="cartModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+          <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h1 class="modal-title fs-5" id="exampleModalLabel">View Cart</h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+              <div class="modal-body">
+                <table class="table table-bordered">
+                  <thead>
+                    <tr>
+                      <th>No</th>
+                      <th>Product Image</th>
+                      <th>Product Name</th>
+                      <th>Category Name</th>
+                      <th>Price</th>
+                      <th>Quantity</th>
+                      <th>Subtotal</th>
+                    </tr>
+                  </thead>
+                  <tbody id="cartDetailsBody">
+                    <!-- Cart details will be inserted here dynamically -->
+                  </tbody>
+                </table>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+
+
     <script>
-    
+        window.addEventListener('load', function() {
+            setTimeout(function() {
+                document.getElementById('loader').style.display = 'none';
+            }, 1000);
+        });
+
+        async function getOrders() {
+            const responseGetOrder = await fetch('/getorders', {
+                method: 'GET',
+                headers: {'Authorization':`Bearer ${localStorage.getItem('token')}`}
+            });
+
+            const ordersDataJson = await responseGetOrder.json();
+
+            const ordersData = ordersDataJson.data;
+
+
+            var ordersTableBody = document.getElementById('ordersTableBody');
+            ordersTableBody.innerHTML = '';
+
+            ordersData.forEach(function(order, index) {
+            var orderDate = formatDate(order.order_date);
+            var row = `<tr>
+                        <td class="text-light">${index + 1}</td>
+                        <td class="text-light">${order.order_personName}</td>
+                        <td class="text-light">${order.order_status}</td>
+                        <td class="text-light">₹${(order.amount).toFixed(2)}</td>
+                        <td class="text-light">${order.paymentMode}</td>
+                        <td class="text-light">${orderDate}</td>
+                        <td class="text-light"> <button class="btn btn-primary" onclick="viewCart('${order._id}')">View Cart</button> </td>
+                        `
+                        row += `<td><a class="btn bg-light" href='/invoice?id=${order._id}'><i class="bi bi-box-arrow-in-down"></i> Invoice</a></td>`
+                        if(order.receipt_url != ''){
+                        row+=` <td><a class="btn bg-light" href='/transactionReceipt?id=${order._id}'><i class="bi bi-file-earmark-text"></i> Receipt</a></td>`
+                        }else{
+                        row+=`<td></td>`;
+                        }
+
+                        row+=`</tr>`;
+                    
+            ordersTableBody.innerHTML += row;
+            });
+        }
+        
+        async function viewCart(orderId) {
+
+            const responseGetOrder = await fetch('/getorders', {
+                method: 'GET',
+                headers: {'Authorization':`Bearer ${localStorage.getItem('token')}`}
+            });
+
+            const ordersDataJson = await responseGetOrder.json();
+
+            const ordersData = ordersDataJson.data;
+
+            var order = ordersData.find(function(order) {
+            return order._id === orderId;
+            });
+
+            var cartDetailsBody = document.getElementById('cartDetailsBody');
+            cartDetailsBody.innerHTML = '';
+
+            let no = 1;
+            order.cartId.forEach(function(item) {
+            var subtotal = item.price * item.quantity;
+            var row = `<tr>
+                        <td>${no++}</td>
+                        <td><img src="http://localhost:9999/${item.product_picture}" alt="Product Image" style="max-width: 100px;"></td>
+                        <td>${item.productName}</td>
+                        <td>${item.categoryName}</td>
+                        <td>₹${item.price}</td>
+                        <td>${item.quantity}</td>
+                        <td>₹${subtotal}</td>
+                        </tr>`;
+            cartDetailsBody.innerHTML += row;
+            });
+
+            $('#cartModal').modal('show');
+        }
+
+        function formatDate(dateString) {
+            var date = new Date(dateString);
+            var formattedDate = date.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' });
+            var formattedTime = date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+
+            return formattedDate + ' ' + formattedTime;
+        }
+
+        getOrders();
     </script>
 </body>
 </html>

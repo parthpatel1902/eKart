@@ -8,9 +8,10 @@ const orderSchema = new mongoose.Schema({
         type:mongoose.Schema.Types.ObjectId,
         ref:'user'
     },
-    cartId:{
-        type:Array
-    },
+    cartId:[{
+        type:mongoose.Schema.Types.ObjectId,
+        ref:'cart'
+    }],
     AddressId:{
         type:mongoose.Schema.Types.ObjectId,
         ref:'address'
@@ -21,11 +22,11 @@ const orderSchema = new mongoose.Schema({
         default:'COD'
     },
     amount:{
-        type:Number
+        type:Number 
     },
     order_status:{
         type:String,
-        enum:['Pending','Confirmed','Cancelled','Delivered'],
+        enum:['Pending','dispatched','Delay','Cancelled','Delivered'],
         default:'Pending'
     },
     order_date:{
