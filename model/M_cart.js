@@ -20,7 +20,8 @@ const cartSchema = new mongoose.Schema({
         type: String
     },
     productId:{
-        type: mongoose.Schema.ObjectId
+        type: mongoose.Schema.ObjectId,
+        ref:"product"
     },
     isPurchased:{
         type: Boolean,

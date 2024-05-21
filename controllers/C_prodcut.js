@@ -286,7 +286,12 @@ const numberOfCart = async(req,res)=>{
 const getCartItem = async(req,res)=>{
     const userId = req.user.id;
     try {
-        const totalcart = await cart.find({userId:userId,isPurchased:false});
+        
+        const totalcart = await cart.find({userId:userId,isPurchased:false})
+        .populate({
+            path: "productId",
+            select: "quantity"
+        }).exec();
 
         const cartItems = [];
 
@@ -383,10 +388,12 @@ const addorder = async(req,res)=>{
         .then(async(result) => {
 
             await cart.updateMany({_id:{$in:cartId}},{$set:{isPurchased:true}});
+            
+            await Promise.all(minusQty.map(async (item) => {
+                await product.updateOne({_id: item.productId}, { $inc: { quantity: -item.quantity } });
+            }));
 
-            minusQty.map(async(item)=>{
-                await product.updateOne({_id:item.productId},{ $inc: { quantity: -item.quantity } } )
-            })
+            mangeCart();
 
             return res.json({success:true,data:res_add});
         })
@@ -401,110 +408,114 @@ const addorder = async(req,res)=>{
     }
 }
 
-const stripePayment = async(req,res)=>{
+const mangeCart = async()=>{
+    try {
+        const findQuantityZeroProduct = await product.find({quantity:0},{_id:1})
+        const resDelete = await cart.deleteMany({productId:{$in:findQuantityZeroProduct},isPurchased:false});
+    } catch (error) {
+        console.log("Error from the mangeCart function >>>",error);
+    }
+}
+
+const stripePayment = async(req, res) => {
     try {
         const userId = req.user.id;
         const {pid} = req.body;
 
-        
-        const order_personName = await user.findOne({_id:req.user.id},{_id:0,name:1});
-
-        const AddressId = await address.findOne({userId:req.user.id},{_id:1});
+        const order_personName = await user.findOne({_id: req.user.id}, {_id: 0, name: 1});
+        const AddressId = await address.findOne({userId: req.user.id}, {_id: 1});
 
         const cartRes = await cart.aggregate([
             {
-              $match: {
-                userId: req.user.id,
-                isPurchased:false
-              }
+                $match: {
+                    userId: req.user.id,
+                    isPurchased: false
+                }
             },
             {
-              $project: {
-                _id: 1,
-                subtotal: { $multiply: ["$price", "$quantity"] },
-                productId:1,
-                quantity:1
-              }
+                $project: {
+                    _id: 1,
+                    subtotal: { $multiply: ["$price", "$quantity"] },
+                    productId: 1,
+                    quantity: 1
+                }
             }
-        ])
+        ]);
 
         let amount = 0;
-        
         const cartId = [];
-
         const minusQty = [];
 
-        cartRes.map((item)=>{
+        cartRes.map((item) => {
             amount = amount + item.subtotal;
             cartId.push(item._id);
-            minusQty.push({productId:item.productId,quantity:item.quantity});
-        })
+            minusQty.push({productId: item.productId, quantity: item.quantity});
+        });
 
-        const userAddress = await address.findOne({userId:userId});
-        const userDetails = await user.findOne({_id:userId});
-         
+        const userAddress = await address.findOne({userId: userId});
+        const userDetails = await user.findOne({_id: userId});
+
         stripe.customers.create({
             email: userDetails.email,
             source: pid,
             name: userDetails.name,
             address: {
-                line1:userAddress.street + "," + userAddress.area + ",",
-                city:userAddress.city,
-                state:userAddress.state,
-                postal_code:userAddress.pincode,
+                line1: userAddress.street + "," + userAddress.area + ",",
+                city: userAddress.city,
+                state: userAddress.state,
+                postal_code: userAddress.pincode,
                 country: 'India',
             }
         })
         .then((customer) => {
+            const totalAmount = Math.round(amount * 100); // Ensuring the amount is an integer
             return stripe.charges.create({
-                amount: amount*100,     // amount will be amount*100
-                description: "Ecommerc site",
+                amount: totalAmount,
+                description: "E-commerce site",
                 currency: 'INR',
                 customer: customer.id
             });
         })
         .then((charge) => {
-            console.log(charge);
             const insert_data = {
-                order_personId:req.user.id,
-                order_personName:order_personName.name,
-                cartId:cartId,
-                AddressId:AddressId._id,
+                order_personId: req.user.id,
+                order_personName: order_personName.name,
+                cartId: cartId,
+                AddressId: AddressId._id,
                 paymentMode: "Online",
-                amount:amount,
-                receipt_url:charge.receipt_url,
-                createdAt:new Date(),
-            }
-    
+                amount: amount,
+                receipt_url: charge.receipt_url,
+                createdAt: new Date(),
+            };
+
             const res_add = new order(insert_data);
-    
+
             res_add.save()
             .then(async(result) => {
-    
-                await cart.updateMany({_id:{$in:cartId}},{$set:{isPurchased:true}});
-    
-                minusQty.map(async(item)=>{
-                    await product.updateOne({_id:item.productId},{ $inc: { quantity: -item.quantity } } )
-                })
-    
-                return res.json({success:true,data:res_add});
+                await cart.updateMany({_id: {$in: cartId}}, {$set: {isPurchased: true}});
+
+                minusQty.map(async(item) => {
+                    await product.updateOne({_id: item.productId}, { $inc: { quantity: -item.quantity } });
+                });
+
+                return res.json({success: true, data: res_add});
             })
             .catch((error) => {
                 console.log("Error >>>>> ", error.message);
                 return errorRes(res, 500, "Some Internal Error");
             });
-    
+
         })
         .catch((err) => {
             console.log(err);
+            return errorRes(res, 500, "Payment failed");
         });
 
     } catch (error) {
-        console.log("Error from the stripePayment function >>>>>",error);
-        return errorRes(res,500,"some internal error");
+        console.log("Error from the stripePayment function >>>>>", error);
+        return errorRes(res, 500, "Some internal error");
     }
-}
-
+};
 
 const getOrderInvoice = async(req,res)=>{
     try {
@@ -694,7 +705,6 @@ const totalSelling = async(req,res)=>{
     }
 }
 
-
 module.exports = {
     addCategory,
     getCategory,
@@ -716,3 +726,4 @@ module.exports = {
     getTransactionReceipt,
     totalSelling
 }
+

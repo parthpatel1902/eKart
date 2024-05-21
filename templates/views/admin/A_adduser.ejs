@@ -296,7 +296,7 @@
                   userProfile:item.userProfile
               };
 
-              adduser += `<tr><td class='text-center'>${number++}</td><td>${item.name}</td><td>${item.email}</td><td>${item.mobile}</td><td>${item.gender}</td><td>${item.address}</td><td><img src="${item.userProfile}" height="60px" width="80px"></td>
+              adduser += `<tr id='tr-${item._id}'><td class='text-center'>${number++}</td><td>${item.name}</td><td>${item.email}</td><td>${item.mobile}</td><td>${item.gender}</td><td>${item.address}</td><td><img src="${item.userProfile}" height="60px" width="80px"></td>
                 <td class='text-center'>
                 <button class='btn btn-dark'><i class="bi bi-pencil-square" onclick='updateRecord(${JSON.stringify(update_data)})' data-bs-toggle="modal" data-bs-target="#updateusermodel"></i></button>
                 </td>
@@ -330,6 +330,7 @@
     }
 
     function deleteUser(id){
+
       try {
             Swal.fire({
               title: 'Are you sure?',
@@ -360,7 +361,7 @@
                   icon: "success"
               }).then(function (result) {
                   if (result.isConfirmed) {
-                      location.reload();
+                      $(`#tr-${id}`).remove();
                   }
               });
             }}

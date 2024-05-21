@@ -5,6 +5,7 @@ const jwt = require('jsonwebtoken');
 require('dotenv').config();
 const nodemailer = require('nodemailer');
 const user = require('../model/M_user');
+const order = require('../model/M_order');
 const fs = require('fs')
 const path = require('path');
 
@@ -471,6 +472,13 @@ const sentNotification = async(req,res)=>{
         const token = req.body.token;
         const imageurl = req.body.imageurl;
 
+        // AAAAqvegbws:APA91bEij3Ys5K2wUbwM3xtaowefC6aCQPIpC4P8Wf90ZXA6IYE-2Dlgi36tzjVZvrZ3HYNBbhVNHD3puVtvPpGLlRkY6YhsOjKqbs6fMmRzDzLzCO3vR-YJhde9PmaPzv9KASfqAipy
+
+        //=====================
+        // for the android devices -> AAAAwJ5_dkI:APA91bFnEyIVkV0zEMhA2Wwaoe6E1mgkMtSxrEKkc-4Fx1uyBYW2LRk5RnIUXgpyC_7yc2lasIsXCD6Yv3foMCHQXqoVM1cODWZR1x51bqCXZBr55nJ-PLt5jT9T2DsKwgYiWbt-zhqv
+        //=====================
+
+
         const FCM = require('fcm-node');
         const serverKey ='AAAAwJ5_dkI:APA91bFnEyIVkV0zEMhA2Wwaoe6E1mgkMtSxrEKkc-4Fx1uyBYW2LRk5RnIUXgpyC_7yc2lasIsXCD6Yv3foMCHQXqoVM1cODWZR1x51bqCXZBr55nJ-PLt5jT9T2DsKwgYiWbt-zhqv';
         const fcm = new FCM(serverKey);
@@ -502,7 +510,37 @@ const sentNotification = async(req,res)=>{
     }
 }
 
+// ================================= Orders ==================================================
+
+const getAllOrders = async(req,res)=>{
+    try {
+        const allOrder = await order.find({isDelete:false})
+        .populate({
+            path: "cartId",
+            select: "productName categoryName price quantity product_picture"
+        }).exec();
+        res.json({success:true,allOrder});
+    } catch (error) {
+        console.log("Error from the getAllOrders function >>",error);
+        return errorRes(res,500,"Some Internal Error")
+    }
+}
+
+const editAllOrdersStatus = async(req,res)=>{
+    try {
+        console.log(req.body);
+        await order.findByIdAndUpdate({_id:req.body.id},{...req.body});
+        res.json({success:true});
+    } catch (error) {
+        console.log("Error from the editAllOrdersStatus :",error);
+        return errorRes(res,500,"Some Internal Error")
+    }
+} 
+
+
+
 module.exports = {
     addadmin,upload,adminlogin,adminlogout,checkavlemail,sendEmail,updatePassword,getdetails,addUser
-    ,getUserDetails,deleteUser,checkAvl,updateUser,changePassword,sentNotification
+    ,getUserDetails,deleteUser,checkAvl,updateUser,changePassword,sentNotification,getAllOrders,
+    editAllOrdersStatus
 }

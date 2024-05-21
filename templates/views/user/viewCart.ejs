@@ -109,9 +109,11 @@
                     <p class="card-text">Category: ${item.categoryName}</p>
                     <p class="card-text">Price: <spna class='border p-1 rounded shadow-sm'>₹${item.price}</spna></p>
                     <p class="card-text">Quantity: 
-                        <button class="btn btn-sm btn-primary" onclick="updateQuantity('${item._id}', 'minus',${item.price})">-</button>
+                        <button class="btn btn-sm btn-primary" onclick="updateQuantity('${item._id}', 'minus',${item.price},${item.productId.quantity})"> - </button>
+
                         <span id="quantity-${item._id}">${item.quantity}</span>
-                        <button class="btn btn-sm btn-primary" onclick="updateQuantity('${item._id}', 'plus',${item.price})">+</button>
+                        <button class="btn btn-sm btn-primary" id='${item._id}-quantityPlusButton' onclick="updateQuantity('${item._id}', 'plus',${item.price},'${item.productId.quantity}')" ${item.quantity == item.productId.quantity ? 'disabled' : ''
+                    }>+</button>
                     </p>
                     <p class="card-text"><strong> Subtotal: </strong>₹<span id="subtotal-${item._id}" class='text-primary text-3'>${item.subtotal}</span></p>
                     <button class='btn btn-danger' onclick="removeItem('${item._id}','${item.productName}')">Remove Item</button>
@@ -122,32 +124,36 @@
             `;
         });
         $('#cart-items').html(cartHtml);
-        $('#total-price').text(total);
+        $('#total-price').text((total).toFixed(2));
     }
 
-    async function updateQuantity(itemId, action,price) {
-       
+    async function updateQuantity(itemId, action,price,avlQuantity) {
+
         if(action === 'plus'){
             let quantity = Number($('#quantity-' + itemId).text()) + 1;
-
+            
             const formData = new FormData();
             formData.append('id', itemId);
             formData.append('quantity', quantity);
             formData.append('subtotal',(price*quantity).toFixed(2));
-
+            
             const resEditCart = await fetch("/editcart",{
                 method:"PATCH",
                 body:formData
             });
-
+            
             const resEditCartJSON = await resEditCart.json();
-
+            
             if(resEditCartJSON.success){
                 $('#quantity-' + itemId).text(quantity);
                 $(`#subtotal-${itemId}`).text((price*quantity).toFixed(2));
                 const totalPrice = $(`#total-price`).text();
                 $(`#total-price`).text((Number(totalPrice) + Number(price)).toFixed(2));
             }            
+            const qty = Number($('#quantity-' + itemId).text());
+            if(qty == avlQuantity){
+                document.getElementById(`${itemId}-quantityPlusButton`).disabled = true;
+            }
         }
         else if(action === 'minus'){
             let quantity = Number($('#quantity-' + itemId).text()) - 1;
@@ -156,7 +162,6 @@
             }
 
             const subtotal = $(`#subtotal-${itemId}`).text();
-            // update cart in Db
             const formData = new FormData();
             formData.append('id', itemId);
             formData.append('quantity', quantity);
@@ -175,7 +180,11 @@
                 const total = $(`#total-price`).text();
                 $(`#total-price`).text((Number(total) - price).toFixed(2));
             }
-            
+
+            const qty = Number($('#quantity-' + itemId).text());
+            if (qty != avlQuantity) {
+                document.getElementById(`${itemId}-quantityPlusButton`).disabled = false;
+            }
 
         }
     }

@@ -44,7 +44,7 @@
         <div class="container mt-5">
             <div class="jumbotron">
                 <div class="container mt-5">
-                    <div class="col-md-12">
+                    <div class="col-md-12" id="orderTable">
                         <table class="table table-responsive bg-dark rounded">
                         <thead>
                             <tr>
@@ -123,6 +123,13 @@
             const ordersDataJson = await responseGetOrder.json();
 
             const ordersData = ordersDataJson.data;
+
+            
+            if(ordersData.length == 0){
+              console.log("ordersData.length >>",ordersData.length);
+              document.getElementById("orderTable").innerHTML = `<center><h1>For view the order start the shopping <a class='btn btn-primary' href='/viewproduct'>Buy Now</a></h1></center>`
+              return;
+            }
 
 
             var ordersTableBody = document.getElementById('ordersTableBody');

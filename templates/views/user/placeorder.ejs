@@ -598,7 +598,7 @@ document.getElementById('famousplace1').addEventListener('input', validateFamous
         }).then(async(result) => {
             if (result.isConfirmed) {
 
-                const order = await fetch("/order",{
+                const order = await fetch("/addorder",{
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
@@ -607,6 +607,8 @@ document.getElementById('famousplace1').addEventListener('input', validateFamous
                 })
 
                 const orderJSON = await order.json();
+
+                console.log(orderJSON);
 
                 if(orderJSON.success){
                     return Swal.fire({

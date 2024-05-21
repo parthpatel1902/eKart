@@ -434,7 +434,7 @@
 
             async function getProducts(){
               const resProduct = await fetch("/getproduct",{
-                method: 'GET', // or 'POST', 'PUT', etc. depending on your endpoint
+                method: 'GET',
                 headers: {
                   'Authorization': `Bearer ${localStorage.getItem('token')}`
                 }
@@ -447,7 +447,7 @@
               let no = 1;
               
               products.data.map((item)=>{
-                  html += `<tr>
+                  html += `<tr id='product-${item._id}')'>
                     <td>${no++}</td>
                     <td>${item.productName}</td>
                     <td>${item.categoryName}</td>
@@ -533,7 +533,8 @@
                         icon: "success"
                       }).then((result)=>{
                         if (result.isConfirmed) {
-                          location.reload();
+                          displayremovedProducts();
+                          getProducts();
                         }
                       })
                     }

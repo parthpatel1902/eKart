@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <%- include('../../partials/admin_navbar.ejs') %>
+  <title>Customer Orders</title>
+  <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.css">
+  <link rel="stylesheet" href="assets/vendor/bootstrap/css/bootstrap.min.css">
+</head>
+<body>
+
+<main id="main" class="main">
+    <div class="pagetitle">
+      <h1>Customer Orders</h1>
+    </div>
+    
+    <div class="modal fade" id="cartModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h1 class="modal-title fs-5" id="exampleModalLabel">View Cart</h1>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <table class="table table-bordered" id="cartTable">
+                <thead>
+                  <tr>
+                    <th>No</th>
+                    <th>Product Image</th>
+                    <th>Product Name</th>
+                    <th>Category Name</th>
+                    <th>Price</th>
+                    <th>Quantity</th>
+                    <th>Subtotal</th>
+                  </tr>
+                </thead>
+                <tbody id="cartDetailsBody">
+                  <!-- Cart details will be inserted here dynamically -->
+                </tbody>
+              </table>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+          </div>
+        </div>
+    </div>
+
+    <section class="section dashboard">
+        <div class="row">
+            <div class="container mt-5">
+                <div class="col-md-12">
+                    <table class="table table-responsive rounded" id="orderTable">
+                        <thead>
+                            <tr>
+                            <th>No</th>
+                            <th>Person Name</th>
+                            <th>Order Status</th>
+                            <th>Amount</th>
+                            <th>Payment Mode</th>
+                            <th>Order Date</th>
+                            <th>Action</th>
+                            <th>Edit</th>
+                            <th>Receipt</th>
+                            <th>Invoice</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ordersTableBody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </section>
+</main>
+
+<a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
+
+<!-- Vendor JS Files -->
+<script src="assets/vendor/apexcharts/apexcharts.min.js"></script>
+<script src="assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+<script src="assets/vendor/chart.js/chart.umd.js"></script>
+<script src="assets/vendor/echarts/echarts.min.js"></script>
+<script src="assets/vendor/quill/quill.min.js"></script>
+<script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+<script src="assets/js/main.js"></script>
+<script src="assets/js/orders.js"></script> <!-- New external JS file -->
+</body>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+    getOrders();
+});
+
+async function getOrders() {
+    try {
+        const response = await fetch('/allOrder', {
+            method: 'GET',
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        });
+
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+
+        const ordersData = await response.json();
+        const ordersTableBody = document.getElementById('ordersTableBody');
+        ordersTableBody.innerHTML = '';
+
+        ordersData.allOrder.forEach((order, index) => {
+            const orderDate = formatDate(order.order_date);
+            ordersTableBody.innerHTML += `
+                <tr>
+                    <td>${index + 1}</td>
+                    <td>${order.order_personName}</td>
+                    <td id='orderStatus-${order._id}'>${order.order_status}</td>
+                    <td>₹${order.amount.toFixed(2)}</td>
+                    <td>${order.paymentMode}</td>
+                    <td>${orderDate}</td>
+                    <td><button class="btn btn-primary" onclick="viewCart('${order._id}')">View Cart</button></td>
+                    <td class='text-center' id='action-${order._id}'><i class="bi bi-pencil-square" onclick="changeOrderStatus('${order._id}','${order.order_status}')"></i></td>
+                    <td><a class="btn bg-light" href='/invoice?id=${order._id}'><i class="bi bi-box-arrow-in-down"></i> Invoice</a></td>
+                    <td>${order.receipt_url ? `<a class="btn bg-light" href='/transactionReceipt?id=${order._id}'><i class="bi bi-file-earmark-text"></i> Receipt</a>` : ''}</td>
+                </tr>`;
+        });
+
+        $('#orderTable').DataTable({
+            columnDefs: [{ targets: [6, 7, 8], orderable: false }]
+        });
+    } catch (error) {
+        console.error('Error fetching orders:', error);
+    }
+}
+
+function changeOrderStatus(id, status) {
+    const selectHtml = `
+        <select class='form-control' id='status-${id}'>
+            <option value="Pending">Pending</option>
+            <option value="Dispatched">Dispatched</option>
+            <option value="Delay">Delay</option>
+            <option value="Cancelled">Cancelled</option>
+            <option value="Delivered">Delivered</option>
+        </select>`;
+
+    document.getElementById(`orderStatus-${id}`).innerHTML = selectHtml;
+    document.getElementById(`status-${id}`).value = status;
+    document.getElementById(`action-${id}`).innerHTML = `
+        <div class='d-flex'>
+            <button class='btn btn-dark' onclick="updateOrderStatus('${id}')"><i class="bi bi-check-lg"></i></button>&nbsp;&nbsp;
+            <button class='btn btn-dark' onclick="cancelEditOrder('${id}', '${status}')"><i class="bi bi-x"></i></button>
+        </div>`;
+}
+
+async function updateOrderStatus(id) {
+    const newStatus = document.getElementById(`status-${id}`).value;
+
+    try {
+        const formData = new FormData();
+        formData.append('id', id);
+        formData.append('order_status', newStatus);
+
+        const response = await fetch('/order', {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` },
+            body: formData
+        });
+
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+
+        const data = await response.json();
+        if (data.success) {
+            document.getElementById(`orderStatus-${id}`).innerHTML = `<p>${newStatus}</p>`;
+            document.getElementById(`action-${id}`).innerHTML = `<i class="bi bi-pencil-square" onclick="changeOrderStatus('${id}', '${newStatus}')"></i>`;
+        }
+    } catch (error) {
+        console.error('Error updating order status:', error);
+    }
+}
+
+function cancelEditOrder(id, status) {
+    document.getElementById(`orderStatus-${id}`).innerText = status;
+    document.getElementById(`action-${id}`).innerHTML = `<i class="bi bi-pencil-square" onclick="changeOrderStatus('${id}', '${status}')"></i>`;
+}
+
+async function viewCart(orderId) {
+    try {
+        const response = await fetch('/allOrder', {
+            method: 'GET',
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        });
+
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+
+        const ordersData = await response.json();
+        const order = ordersData.allOrder.find(order => order._id === orderId);
+        const cartDetailsBody = document.getElementById('cartDetailsBody');
+        cartDetailsBody.innerHTML = '';
+
+        order.cartId.forEach((item, index) => {
+            const subtotal = item.price * item.quantity;
+            cartDetailsBody.innerHTML += `
+                <tr>
+                    <td>${index + 1}</td>
+                    <td><img src="http://localhost:9999/${item.product_picture}" alt="${item.productName}" style="max-width: 100px;"></td>
+                    <td>${item.productName}</td>
+                    <td>${item.categoryName}</td>
+                    <td>₹${item.price}</td>
+                    <td>${item.quantity}</td>
+                    <td>₹${subtotal}</td>
+                </tr>`;
+        });
+
+        $('#cartModal').modal('show');
+    } catch (error) {
+        console.error('Error viewing cart:', error);
+    }
+}
+
+function formatDate(dateString) {
+    const date = new Date(dateString);
+    const formattedDate = date.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    const formattedTime = date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+
+    return `${formattedDate} ${formattedTime}`;
+}
+
+</script>
+</html>
+
+

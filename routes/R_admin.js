@@ -32,4 +32,8 @@ router.get("/deleteuser",adminController.deleteUser);
 // update the user details
 router.post("/updateuser/:id",adminController.upload.single('userProfile'),adminController.updateUser);
 
+
+router.get("/allOrder",auth.tokenCheck,adminController.getAllOrders);
+router.post("/order",auth.tokenCheck,multipartMiddleware,adminController.editAllOrdersStatus);
+
 module.exports = router

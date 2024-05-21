@@ -59,6 +59,15 @@ router.get('/addproduct', (req, res) => {
     })
 })
 
+router.get('/userOrders', (req, res) => {
+    if(req.session.token == undefined){
+        return res.redirect("/adminLogin");
+    }
+    res.render('admin/A_userOrders',{
+        token:req.session.token
+    })
+})
+
 router.get("/A_logout",(req,res)=>{
     res.render('admin/A_logout');
 })

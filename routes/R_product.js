@@ -24,7 +24,7 @@ router.get("/getcartitem",auth.tokenCheck,productController.getCartItem);
 router.patch("/editcart",multipartMiddleware,productController.editCartItem);
 
 // for order model
-router.post("/order",auth.tokenCheck,multipartMiddleware,productController.addorder);
+router.post("/addorder",auth.tokenCheck,multipartMiddleware,productController.addorder);
 router.post("/payment",auth.tokenCheck,multipartMiddleware,productController.stripePayment);
 router.get("/invoice",productController.getOrderInvoice);
 router.get("/transactionReceipt",productController.getTransactionReceipt);
