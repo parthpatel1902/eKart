@@ -472,7 +472,6 @@ const sentNotification = async(req,res)=>{
         const token = req.body.token;
         const imageurl = req.body.imageurl;
 
-        // AAAAqvegbws:APA91bEij3Ys5K2wUbwM3xtaowefC6aCQPIpC4P8Wf90ZXA6IYE-2Dlgi36tzjVZvrZ3HYNBbhVNHD3puVtvPpGLlRkY6YhsOjKqbs6fMmRzDzLzCO3vR-YJhde9PmaPzv9KASfqAipy
 
         //=====================
         // for the android devices -> AAAAwJ5_dkI:APA91bFnEyIVkV0zEMhA2Wwaoe6E1mgkMtSxrEKkc-4Fx1uyBYW2LRk5RnIUXgpyC_7yc2lasIsXCD6Yv3foMCHQXqoVM1cODWZR1x51bqCXZBr55nJ-PLt5jT9T2DsKwgYiWbt-zhqv
@@ -502,11 +501,61 @@ const sentNotification = async(req,res)=>{
             if (err) {
                 console.log('Error sending FCM:', err);
             } else {
+                console.log(response);
                 res.json({success:true});
             }
         });
     } catch (error) {
         console.log("error sent notification : ",error);
+    }
+}
+
+const sentNotificationIOS = async (req, res) => {
+    try {
+        const { name, token, imageurl } = req.body;
+
+        const FCM = require('fcm-node');
+        const serverKey = 'AAAAvMa2BsI:APA91bHKGjRfw2eBSgRjVjO902VqG9yRVH3ZJsQRk9j_nBGLAolDQX7OXlLnv8HoZuWVEOx3nuWn11y5aUEVUIsOPaaN_r-9y72Yo-aLN31MipXXds7kr2cgn2S0Bzdn-mc0b_p5D-0R';
+        const fcm = new FCM(serverKey);
+
+        const message = {
+            to: token,
+            data: {
+                postId: '12345',
+            },
+            notification: {
+                title: 'Greeting Message',
+                body: `Good Morning ${name}`,
+                description: 'Description of the notification'
+            },
+            apns: {
+                payload: {
+                    aps: {
+                        'mutable-content': 1,
+                        alert: {
+                            title: 'Greeting Message',
+                            body: `Good Morning ${name}`
+                        }
+                    }
+                },
+                fcm_options: {
+                    image: imageurl
+                }
+            }
+        };
+
+        fcm.send(message, function(err, response) {
+            if (err) {
+                console.log('Error sending FCM:', err);
+                res.status(500).json({ success: false, error: err });
+            } else {
+                console.log(response);
+                res.json({ success: true });
+            }
+        });
+    } catch (error) {
+        console.log("error sent notification:", error);
+        res.status(500).json({ success: false, error: error.message });
     }
 }
 
@@ -542,5 +591,5 @@ const editAllOrdersStatus = async(req,res)=>{
 module.exports = {
     addadmin,upload,adminlogin,adminlogout,checkavlemail,sendEmail,updatePassword,getdetails,addUser
     ,getUserDetails,deleteUser,checkAvl,updateUser,changePassword,sentNotification,getAllOrders,
-    editAllOrdersStatus
+    editAllOrdersStatus,sentNotificationIOS
 }

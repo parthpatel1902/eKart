@@ -2,7 +2,7 @@
   <%- include('../../partials/admin_navbar.ejs') %>
   <style>
     .login-form {
-        max-width: 400px;
+        /* max-width: 400px; */
         margin: auto;
         padding: 20px;
         border: 1px solid #ddd;
@@ -34,9 +34,8 @@
 
     <section class="section dashboard">
       <div class="row">
-        <div class="col-12">
-            <center>
-                <div class="col-md-6">
+        <div class="col-md-12 d-flex">
+                <div class="col-md-6 mt-3 p-2">
                     <div class="login-form">
                         <div class="mb-3">
                             <label for="Name" class="form-label">Name</label>
@@ -51,10 +50,27 @@
                             <label for="imageurl">Image Url</label>
                             <input type="text" class="form-control" id="imageurl" placeholder="Enter Image Url">
                         </div>
-                        <button class="btn btn-primary" id="sent" onclick="sentNotification(event)"><i class="bi bi-bell-fill"></i> Sent Notification</button>
+                        <button class="btn btn-primary" id="sent" onclick="sentNotification(event)"><i class="bi bi-bell-fill"></i> Sent Notification Android</button>
                     </div>
                 </div>
-            </center>
+                <div class="col-md-6 mt-3 p-2">
+                    <div class="login-form">
+                        <div class="mb-3">
+                            <label for="Name" class="form-label">Name</label>
+                            <input type="text" class="form-control" id="name1" placeholder="Enter name">
+                            <div id="nameError" class="text-danger"></div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="token">token</label>
+                            <input type="text" class="form-control" id="token1" placeholder="Enter token">
+                        </div>
+                        <div class="mb-3">
+                            <label for="imageurl">Image Url</label>
+                            <input type="text" class="form-control" id="imageurl1" placeholder="Enter Image Url">
+                        </div>
+                        <button class="btn btn-primary" id="sent" onclick="sentNotification1(event)"><i class="bi bi-bell-fill"></i> Sent Notification IOS</button>
+                    </div>
+                </div>
         </div>
       </div>
     </section>
@@ -76,6 +92,43 @@
   <script src="assets/js/main.js"></script>
 
   <script>
+        async function sentNotification1(event){
+            event.preventDefault();
+
+            const name = document.getElementById('name1').value;
+            const token = document.getElementById('token1').value;
+            const imageurl = document.getElementById('imageurl1').value;
+        
+            if(name == '' || token == '' || imageurl == ''){
+                return Swal.fire({
+                    icon: 'error',
+                    title: 'Oops...',
+                    text: 'Please fill all the fields',
+                })
+            }
+
+
+            const formData = new FormData();
+            formData.append('name',name);
+            formData.append('token',token);
+            formData.append('imageurl',imageurl);
+
+            const res = await fetch("/notificationIOS",{
+                method: "POST",
+                body: formData
+            })
+
+            const resjson = await res.json();
+            
+            if(resjson.success){
+                return Swal.fire({
+                    icon: 'success',
+                    title: 'Notification is Sent successfully',
+                })
+            }
+        
+        }
+
         async function sentNotification(event){
             event.preventDefault();
 
