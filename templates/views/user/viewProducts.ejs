@@ -43,6 +43,20 @@
     <%- include('../../partials/navbar.ejs') %>
 
 <div class="container mt-5">
+  <div class="row mb-4 bg-dark p-2 rounded">
+    <div class="col-md-4 mt-2">
+      <input type="text" id="searchInput" class="form-control" placeholder="Search products...">
+    </div>
+    <div class="col-md-4 mt-2">
+      <select id="categorySelect" class="form-control">
+        <option value="">All Categories</option>
+      </select>
+    </div>
+    <div class="col-md-4 mt-2">
+      <input type="number" id="minPrice" class="form-control" placeholder="Min Price">
+      <input type="number" id="maxPrice" class="form-control mt-2" placeholder="Max Price">
+    </div>
+  </div>
   <div id="productCards" class="row"></div>
   <nav aria-label="Page navigation">
     <ul id="pagination" class="pagination"></ul>
@@ -50,103 +64,109 @@
 </div>
 
 <script>
-  //===============//===============//===============//===============//
-  
   window.addEventListener('load', function() {
     setTimeout(function() {
         document.getElementById('loader').style.display = 'none';
     }, 2000);
   });
 
-  //===============//===============//===============//===============//
-
   async function fetchProducts() {
     try {
-
         const token = localStorage.getItem('token');
-
         const response = await fetch('/getproduct', {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-            });
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+        });
         const data = await response.json();
         return data;
     } catch (error) {
-      console.error('Error fetching products:', error);
-      return [];
+        console.error('Error fetching products:', error);
+        return [];
     }
   }
 
-  // Function to display products using Bootstrap cards
-  
-  async function displayProducts(products) {
-  const productCards = document.getElementById('productCards');
-  productCards.innerHTML = '';
-
-  const token = localStorage.getItem('token');
-
-  const resProductCheck = await fetch("/getcartitem", {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${token}`
+  async function fetchCategories() {
+    try {
+        const response = await fetch('/getcategory', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            },
+        });
+        const data = await response.json();
+        return data.data;
+    } catch (error) {
+        console.error('Error fetching categories:', error);
+        return [];
     }
-  });
+  }
 
-  const resProductCheckJSON = await resProductCheck.json();
-  const ProductsID = resProductCheckJSON.data.map(item => ({
-    pid: item.productId._id,
-    cartId: item._id
-  }));
+  async function displayProducts(products) {
+    const productCards = document.getElementById('productCards');
+    productCards.innerHTML = '';
+    const token = localStorage.getItem('token');
+    const resProductCheck = await fetch("/getcartitem", {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+      }
+    });
 
-  products.forEach(product => {
-    const isInCart = ProductsID.find(item => item.pid === product._id);
-    let card = `
-      <div class="col-md-3 mb-4">
-        <div class="card shadow-lg">
-          <img src="${product.product_picture}" class="card-img-top" alt="${product.productName}" height="200px" width="169px">
-          <div class="card-body">
-            <h5 class="card-title border border-light bg-light text-center">${product.productName}</h5>
-            <p class="card-text">Discount: ${product.discount}%</p>
-            <p class="card-text"><b>Effective Price:</b> <del>${product.price}</del>&nbsp;&nbsp;<ins>${product.price - (product.price * product.discount) / 100}/-</ins></p>
-            <p class="card-text">Available Quantity: <span class='text-danger'>${product.quantity}</span></p>
-            <div class="d-grid gap-2">
-    `;
+    const resProductCheckJSON = await resProductCheck.json();
+    const ProductsID = resProductCheckJSON.data.map(item => ({
+      pid: item.productId._id,
+      cartId: item._id
+    }));
 
-    if (product.quantity < 1) {
-      card += `
-        <div id='${product._id}'>
-          <button class="btn btn-primary" style='width:100%' type="button"><i class="bi bi-bell-fill"></i> Notify me</button>
-        </div>`;
-    } else {
-      if (isInCart) {
+    products.forEach(product => {
+      const isInCart = ProductsID.find(item => item.pid === product._id);
+      let card = `
+        <div class="col-md-3 mb-4">
+          <div class="card shadow-lg">
+            <img src="${product.product_picture}" class="card-img-top" alt="${product.productName}" height="200px" width="169px">
+            <div class="card-body">
+              <h5 class="card-title border border-light bg-light text-center">${product.productName}</h5>
+              <p class="card-text">Discount: ${product.discount}%</p>
+              <p class="card-text"><b>Effective Price:</b> <del>${product.price}</del>&nbsp;&nbsp;<ins>${product.price - (product.price * product.discount) / 100}/-</ins></p>
+              <p class="card-text">Available Quantity: <span class='text-danger'>${product.quantity}</span></p>
+              <div class="d-grid gap-2">
+      `;
+
+      if (product.quantity < 1) {
         card += `
           <div id='${product._id}'>
-            <button onclick='removeToCart(${JSON.stringify({ buttonId: product._id, cartId: isInCart.cartId, item: product })})' class='btn btn-warning' style='width:100%'>Remove from cart</button>
+            <button class="btn btn-primary" style='width:100%' type="button"><i class="bi bi-bell-fill"></i> Notify me</button>
           </div>`;
       } else {
-        card += `
-          <div id='${product._id}'>
-            <button class="btn btn-outline-success" style='width:100%' onclick='addToCart(${JSON.stringify(product)})' type="button">Add to cart</button>
-          </div>`;
+        if (isInCart) {
+          card += `
+            <div id='${product._id}'>
+              <button onclick='removeToCart(${JSON.stringify({ buttonId: product._id, cartId: isInCart.cartId, item: product })})' class='btn btn-warning' style='width:100%'>Remove from cart</button>
+            </div>`;
+        } else {
+          card += `
+            <div id='${product._id}'>
+              <button class="btn btn-outline-success" style='width:100%' onclick='addToCart(${JSON.stringify(product)})' type="button">Add to cart</button>
+            </div>`;
+        }
       }
-    }
 
-    card += `
+      card += `
+              </div>
             </div>
           </div>
         </div>
-      </div>
-    `;
+      `;
 
-    productCards.innerHTML += card;
-  });
-}
+      productCards.innerHTML += card;
+    });
+  }
 
-  
   async function addToCart(item){
     const formData = new FormData();
     formData.append('productName',item.productName);
@@ -190,36 +210,34 @@
   }
 
   async function removeToCart(item) {
-  const token = localStorage.getItem('token');
+    const token = localStorage.getItem('token');
 
-  const resRemoveCart = await fetch(`/removecart?cartId=${item.cartId}`, {
-    method: 'DELETE',
-    headers: {
-      'Authorization': `Bearer ${token}`
-    },
-  });
+    const resRemoveCart = await fetch(`/removecart?cartId=${item.cartId}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      },
+    });
 
-  const resRemoveCartJson = await resRemoveCart.json();
+    const resRemoveCartJson = await resRemoveCart.json();
 
-  if (resRemoveCartJson.success) {
-    $("#numberCart").text(resRemoveCartJson.numberCart);
+    if (resRemoveCartJson.success) {
+      $("#numberCart").text(resRemoveCartJson.numberCart);
 
-    Toastify({
-      text: `${item.item.productName} removed from cart!`,
-      duration: 2000,
-      gravity: "top",
-      position: 'right',
-      className: "custom-toast",
-      stopOnFocus: true
-    }).showToast();
+      Toastify({
+        text: `${item.item.productName} removed from cart!`,
+        duration: 2000,
+        gravity: "top",
+        position: 'right',
+        className: "custom-toast",
+        stopOnFocus: true
+      }).showToast();
 
-    $(`#${item.buttonId}`).html('');
-    $(`#${item.buttonId}`).html(`<button class="btn btn-outline-success" style='width:100%' onclick='addToCart(${JSON.stringify(item.item)})' type="button">Add to cart</button>`);
+      $(`#${item.buttonId}`).html('');
+      $(`#${item.buttonId}`).html(`<button class="btn btn-outline-success" style='width:100%' onclick='addToCart(${JSON.stringify(item.item)})' type="button">Add to cart</button>`);
+    }
   }
-}
 
-  // Function to handle pagination
-  
   function handlePagination(products, currentPage = 1, itemsPerPage = 8) {
     const paginationElement = document.getElementById('pagination');
     paginationElement.innerHTML = '';
@@ -249,10 +267,56 @@
     displayProducts(displayedProducts);
   }
 
-  // Initial function to fetch and display products
+  function filterProducts(products) {
+    const searchInput = document.getElementById('searchInput').value.toLowerCase();
+    const selectedCategory = document.getElementById('categorySelect').value;
+    const minPrice = parseFloat(document.getElementById('minPrice').value) || 0;
+    const maxPrice = parseFloat(document.getElementById('maxPrice').value) || Infinity;
+
+    return products.filter(product => {
+      const matchesSearch = product.productName.toLowerCase().includes(searchInput);
+      const matchesCategory = selectedCategory === "" || product.categoryName === selectedCategory;
+      const matchesPrice = product.price - (product.price * product.discount) / 100 >= minPrice &&
+                          product.price - (product.price * product.discount) / 100 <= maxPrice;
+      return matchesSearch && matchesCategory && matchesPrice;
+    });
+  }
+
   async function init() {
-    const products = await fetchProducts();
-    handlePagination(products.data);
+    const productsData = await fetchProducts();
+    const products = productsData.data;
+    const categoriesData = await fetchCategories();
+    const categories = categoriesData;
+
+    const categorySelect = document.getElementById('categorySelect');
+    categories.forEach(category => {
+      const option = document.createElement('option');
+      option.value = category.categoryName;
+      option.textContent = category.categoryName;
+      categorySelect.appendChild(option);
+    });
+
+    handlePagination(products);
+
+    document.getElementById('searchInput').addEventListener('input', () => {
+      const filteredProducts = filterProducts(products);
+      handlePagination(filteredProducts);
+    });
+
+    document.getElementById('categorySelect').addEventListener('change', () => {
+      const filteredProducts = filterProducts(products);
+      handlePagination(filteredProducts);
+    });
+
+    document.getElementById('minPrice').addEventListener('input', () => {
+      const filteredProducts = filterProducts(products);
+      handlePagination(filteredProducts);
+    });
+
+    document.getElementById('maxPrice').addEventListener('input', () => {
+      const filteredProducts = filterProducts(products);
+      handlePagination(filteredProducts);
+    });
   }
 
   init();

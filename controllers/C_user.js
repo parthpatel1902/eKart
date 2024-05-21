@@ -149,12 +149,12 @@ const sendEmailForForgetPassword = async(req,res)=>{
     }
       
     const transporter = nodemailer.createTransport({
-        host: 'smtp.gmail.com',
+        host: 'smtp-relay.brevo.com',
         port: 587, 
         secure: false,
         auth: {
-          user: 'patelparth682841@gmail.com',
-          pass: 'vahe pkqx sinx qzja',
+          user: '752c89001@smtp-brevo.com',
+          pass: 'NbPKQXDgHpyrSnka',
         },
     });
   
@@ -218,7 +218,7 @@ const sendEmailForForgetPassword = async(req,res)=>{
     `
     
     const mailOptions = {
-        from: 'patelparth682841@gmail.com',
+        from: '752c89001@smtp-brevo.com',
         to: email,
         subject: 'Password Reset',
         html: template,

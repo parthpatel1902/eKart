@@ -247,10 +247,7 @@ function validatePincode(event) {
     if (!pincodeValue) {
         document.getElementById('pincodeError').textContent = "Pincode is required.";
         pincodeInput.classList.add("is-invalid");
-    } else if (!regex.test(pincodeValue)) {
-        document.getElementById('pincodeError').textContent = "Pincode must contain exactly 6 digits.";
-        pincodeInput.classList.add("is-invalid");
-    } else {
+    }else {
         document.getElementById('pincodeError').textContent = "";
         pincodeInput.classList.remove("is-invalid");
     }
