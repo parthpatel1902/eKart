@@ -1,0 +1,101 @@
+<html>
+  <%- include('../../partials/admin_navbar.ejs') %>
+  <main id="main" class="main">
+    <div class="pagetitle">
+      <h1>Corn Job Demo</h1>
+    </div>
+
+    <section class="section dashboard">
+      <div class="row mt-2">
+        <div class="col-md-8">
+            <div class="container p-2" style="border: 5px inset;">
+                <form id="cronForm">
+                  <div class="form-group mt-2">
+                    <label for="selectMinute">Select Minute (0-59):</label>
+                    <input type="text" id="selectMinute" class="form-control" min="0" max="59">
+                  </div>
+                  <div class="form-group mt-2">
+                    <label for="selectHour">Select Hour:</label>
+                    <input type="text" id="selectHour" class="form-control" min="0" max="23">
+                  </div>
+                  <div class="form-group mt-2">
+                    <label for="selectDay">Select Day:</label>
+                    <input type="text" id="selectDay" class="form-control" min="1" max="31">
+                  </div>
+                  <div class="form-group mt-2">
+                    <label for="selectMonth">Select Month:</label>
+                    <input type="text" id="selectMonth" class="form-control" min="1" max="12">
+                  </div>
+                  <div class="form-group mt-2">
+                    <label for="selectDayOfWeek">Select Day(s) of Week:</label>
+                    <select id="selectDayOfWeek" class="form-control" multiple>
+                      <option value="0">Sunday</option>
+                      <option value="1">Monday</option>
+                      <option value="2">Tuesday</option>
+                      <option value="3">Wednesday</option>
+                      <option value="4">Thursday</option>
+                      <option value="5">Friday</option>
+                      <option value="6">Saturday</option>
+                    </select>
+                  </div>
+                  <button type="button" class="btn btn-primary mt-2" onclick="generateCron()">Start Generate Report</button>
+                  <span style="margin-left: 10px;" id="stopCornButton">
+
+                  </span>
+                </form>
+            </div>
+        </div>
+      </div>
+    </section>
+  </main>
+<script>
+    async function generateCron() {
+        const selectMinute = document.getElementById('selectMinute').value || '*';
+        const selectHour = document.getElementById('selectHour').value || '*';
+        const selectDay = document.getElementById('selectDay').value || '*';
+        const selectMonth = document.getElementById('selectMonth').value || '*';
+        const selectDayOfWeek = Array.from(document.getElementById('selectDayOfWeek').selectedOptions).map(option => option.value).join(',') || '*';
+        const cronExpression = `${selectMinute} ${selectHour} ${selectDay} ${selectMonth} ${selectDayOfWeek}`;
+        
+        const formData = new FormData();
+        formData.append('corn',cronExpression);
+        
+        const resData = await fetch("/startcorn",{
+            method:'POST',
+            body:formData
+        });
+        
+        const resJSON = await resData.json();
+
+        if(resJSON.success){
+            $("#stopCornButton").html(`<button class="btn btn-danger mt-2" onclick='stopCorn()'>Stop corn</button>`);
+        }
+    }
+
+    async function stopCorn(){
+        const resData = await fetch("/stopcorn",{
+            method:'GET',
+        });
+        
+        const resJSON = await resData.json();
+
+        if(resJSON.success){
+            $("#stopCornButton").html(``);
+        }
+    }
+</script>
+  <!-- Vendor JS Files -->
+  <div>
+      <script src="assets/vendor/apexcharts/apexcharts.min.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+      <script src="assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+      <script src="assets/vendor/chart.js/chart.umd.js"></script>
+      <script src="assets/vendor/echarts/echarts.min.js"></script>
+      <script src="assets/vendor/quill/quill.min.js"></script>
+      <script src="assets/vendor/simple-datatables/simple-datatables.js"></script>
+      <script src="assets/vendor/tinymce/tinymce.min.js"></script>
+      <script src="assets/vendor/php-email-form/validate.js"></script>
+      <script src="assets/js/main.js"></script>
+  </div>
+</body>
+</html>

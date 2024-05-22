@@ -37,4 +37,8 @@ router.post("/updateuser/:id",adminController.upload.single('userProfile'),admin
 router.get("/allOrder",auth.tokenCheck,adminController.getAllOrders);
 router.post("/order",auth.tokenCheck,multipartMiddleware,adminController.editAllOrdersStatus);
 
+
+router.post("/startcorn",multipartMiddleware,adminController.startCorn);
+router.get("/stopcorn",adminController.stopCorn);
+
 module.exports = router

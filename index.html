@@ -1,0 +1,63 @@
+<!-- <!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Daily Sales Chart</title>
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+  <style>
+    /* Optional: Add some basic styling */
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      max-width: 800px;
+      margin: 20px auto;
+      padding: 0 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Daily Sales Chart</h1>
+    <div id="salesChart"></div>
+  </div>
+
+  <script>
+    // Your sales data
+    const salesData = [
+      { date: '2024-05-01', sales: 1000 },
+      { date: '2024-05-02', sales: 15000 },
+      { date: '2024-05-03', sales: 1200 },
+      // Add more data here...
+    ];
+
+    // Extract dates and sales
+    const dates = salesData.map(data => data.date);
+    const sales = salesData.map(data => data.sales);
+
+    // Create a trace for the chart
+    const trace = {
+      x: dates,
+      y: sales,
+      type: 'bar',
+    };
+
+    // Define layout options
+    const layout = {
+      title: 'Daily Sales',
+      xaxis: {
+        title: 'Date',
+      },
+      yaxis: {
+        title: 'Sales (INR)',
+      },
+    };
+
+    // Plot the chart
+    Plotly.newPlot('salesChart', [trace], layout, {responsive: true});
+  </script>
+</body>
+</html> -->

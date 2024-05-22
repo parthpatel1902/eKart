@@ -8,6 +8,7 @@ const user = require('../model/M_user');
 const order = require('../model/M_order');
 const fs = require('fs')
 const path = require('path');
+const cron = require('node-cron');
 
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
@@ -588,8 +589,54 @@ const editAllOrdersStatus = async(req,res)=>{
 
 
 
+// for the corn job scheduling
+
+let startCornName;
+
+const isValidCron = (cronExpression) => {
+    return cron.validate(cronExpression);
+}
+
+
+const startCorn = async (req, res) => {
+    try {
+        const cronExpression = req.body.corn;
+
+        if (!isValidCron(cronExpression)) {
+            return errorRes(res, 400, "Invalid cron expression");
+        }
+
+        let i = 0;
+        startCornName = cron.schedule(cronExpression, async () => {
+            console.log("called >>> ", i++);
+        });
+
+        res.json({ success: true, message: "Cron job started" });
+    } 
+    catch (error) {
+        console.log("Error from the startCorn >>>", error);
+        return errorRes(res, 500, "Some Internal Error");
+    }
+}
+
+const stopCorn = async (req, res) => {
+    try {
+        if (startCornName) {
+            startCornName.stop();
+            startCornName = null;  // Reset the cron job variable
+            res.json({ success: true, message: "Cron job stopped" });
+        } else {
+            return errorRes(res, 400, "No cron job to stop");
+        }
+    } catch (error) {
+        console.log("Error from the stopCorn >>>", error);
+        return errorRes(res, 500, "Some Internal Error");
+    }
+}
+
+
 module.exports = {
     addadmin,upload,adminlogin,adminlogout,checkavlemail,sendEmail,updatePassword,getdetails,addUser
     ,getUserDetails,deleteUser,checkAvl,updateUser,changePassword,sentNotification,getAllOrders,
-    editAllOrdersStatus,sentNotificationIOS
+    editAllOrdersStatus,sentNotificationIOS,startCorn,stopCorn
 }

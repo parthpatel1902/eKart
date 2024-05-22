@@ -85,4 +85,13 @@ router.get('/A_useractivity', (req, res) => {
     })
 })
 
+router.get('/A_cornJob', (req, res) => {
+    if(req.session.token == undefined){
+        return res.redirect("/adminLogin");
+    }
+    res.render('admin/A_cornJob',{
+        token:req.session.token
+    })
+})
+
 module.exports = router
