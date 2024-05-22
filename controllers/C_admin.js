@@ -602,13 +602,15 @@ const startCorn = async (req, res) => {
     try {
         const cronExpression = req.body.corn;
 
+        console.log(cronExpression);
+
         if (!isValidCron(cronExpression)) {
             return errorRes(res, 400, "Invalid cron expression");
         }
 
-        let i = 0;
         startCornName = cron.schedule(cronExpression, async () => {
-            console.log("called >>> ", i++);
+            console.log("called");
+            cornEmail();
         });
 
         res.json({ success: true, message: "Cron job started" });
@@ -617,6 +619,83 @@ const startCorn = async (req, res) => {
         console.log("Error from the startCorn >>>", error);
         return errorRes(res, 500, "Some Internal Error");
     }
+}
+
+async function cornEmail(){
+  
+    const transporter = nodemailer.createTransport({
+        host: 'smtp-relay.brevo.com',
+        port: 587, 
+        secure: false,
+        auth: {
+          user: '752c89001@smtp-brevo.com',
+          pass: 'NbPKQXDgHpyrSnka',
+        },
+    });
+    
+    const template = `
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Email Template</title>
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                line-height: 1.6;
+                margin: 0;
+                padding: 0;
+            }
+            .container {
+                max-width: 600px;
+                margin: 0 auto;
+                padding: 20px;
+                border: 1px solid #ddd;
+                border-radius: 5px;
+            }
+            h1 {
+                color: #333;
+            }
+            p {
+                color: #666;
+            }
+            .image-container {
+                text-align: center;
+            }
+            img {
+                max-width: 100%;
+                height: auto;
+                display: block;
+                margin: 0 auto;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>Hello, Friend!</h1>
+            <p>This is a sample email template with some CSS styling and an image.</p>
+            <div class="image-container">
+                <img src='https://im.runware.ai/image/ws/0.5/ii/dcaf9c93-c1dd-48b9-a2d6-60004a08dcf3.jpg' alt="Sample Image">
+            </div>
+            <p>You can customize this template as needed for your email campaigns.</p>
+        </div>
+    </body>
+    </html>
+    `
+    
+    const mailOptions = {
+        from: '752c89001@smtp-brevo.com',
+        to: 'pjpatel.weapplinse@gmail.com',
+        subject: 'test mail',
+        html: template,
+    };
+    
+    transporter.sendMail(mailOptions, async (error, info) => {
+        if (error) {
+            console.error('Error sending email:', error);
+        }
+    });
 }
 
 const stopCorn = async (req, res) => {
