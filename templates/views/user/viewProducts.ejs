@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=width=device-width, initial-scale=1.0">
     <title>Product Display</title>
     <%- include('../../partials/link.ejs') %>
     <style>
@@ -44,17 +44,28 @@
 
 <div class="container mt-5">
   <div class="row mb-4 bg-dark p-2 rounded">
-    <div class="col-md-4 mt-2">
-      <input type="text" id="searchInput" class="form-control" placeholder="Search products...">
+    <div class="col-md-12 d-flex">
+      <div class="col-md-6 mt-2">
+        <input type="text" id="searchInput" class="form-control" placeholder="Search products...">
+      </div>
+      <div class="col-md-6 mt-2 mx-2">
+        <select id="categorySelect" class="form-control">
+          <option value="">All Categories</option>
+        </select>
+      </div>
     </div>
-    <div class="col-md-4 mt-2">
-      <select id="categorySelect" class="form-control">
-        <option value="">All Categories</option>
-      </select>
-    </div>
-    <div class="col-md-4 mt-2">
-      <input type="number" id="minPrice" class="form-control" placeholder="Min Price">
-      <input type="number" id="maxPrice" class="form-control mt-2" placeholder="Max Price">
+    <div class="col-md-12 d-flex">
+      <div class="col-md-6 d-flex mt-2">
+        <input type="number" id="minPrice" class="form-control" placeholder="Min Price">
+        <input type="number" id="maxPrice" class="form-control mx-2 " placeholder="Max Price">
+      </div>
+      <div class="col-md-6 mx-2 mt-2">
+        <select id="sortSelect" class="form-control">
+          <option value="" disabled selected>Sort product :-</option>
+          <option value="asc">Sort by Newest</option>
+          <option value="desc">Sort by Oldest</option>
+        </select>
+      </div>
     </div>
   </div>
   <div id="productCards" class="row"></div>
@@ -132,7 +143,7 @@
             <div class="card-body">
               <h5 class="card-title border border-light bg-light text-center">${product.productName}</h5>
               <p class="card-text">Discount: ${product.discount}%</p>
-              <p class="card-text"><b>Effective Price:</b> <del>${product.price}</del>&nbsp;&nbsp;<ins>${product.price - (product.price * product.discount) / 100}/-</ins></p>
+              <p class="card-text"><b>Effective Price:</b> <del>${product.price}</del>&nbsp;&nbsp;<ins>₹${product.price - (product.price * product.discount) / 100}</ins></p>
               <p class="card-text">Available Quantity: <span class='text-danger'>${product.quantity}</span></p>
               <div class="d-grid gap-2">
       `;
@@ -272,14 +283,25 @@
     const selectedCategory = document.getElementById('categorySelect').value;
     const minPrice = parseFloat(document.getElementById('minPrice').value) || 0;
     const maxPrice = parseFloat(document.getElementById('maxPrice').value) || Infinity;
+    const sortOrder = document.getElementById('sortSelect').value;
 
-    return products.filter(product => {
+    let filteredProducts = products.filter(product => {
       const matchesSearch = product.productName.toLowerCase().includes(searchInput);
       const matchesCategory = selectedCategory === "" || product.categoryName === selectedCategory;
       const matchesPrice = product.price - (product.price * product.discount) / 100 >= minPrice &&
                           product.price - (product.price * product.discount) / 100 <= maxPrice;
       return matchesSearch && matchesCategory && matchesPrice;
     });
+
+    filteredProducts.sort((a, b) => {
+      if (sortOrder === 'asc') {
+        return new Date(b.createdAt) - new Date(a.createdAt);
+      } else {
+        return new Date(a.createdAt) - new Date(b.createdAt);
+      }
+    });
+
+    return filteredProducts;
   }
 
   async function init() {
@@ -314,6 +336,11 @@
     });
 
     document.getElementById('maxPrice').addEventListener('input', () => {
+      const filteredProducts = filterProducts(products);
+      handlePagination(filteredProducts);
+    });
+
+    document.getElementById('sortSelect').addEventListener('change', () => {
       const filteredProducts = filterProducts(products);
       handlePagination(filteredProducts);
     });

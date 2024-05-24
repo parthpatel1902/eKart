@@ -2,6 +2,7 @@
 
     <html>
 <%- include('../../partials/admin_navbar.ejs') %>
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 
   <main id="main" class="main">
 
@@ -138,6 +139,55 @@
                     </div>
                 </div><!-- End Customers Card -->
                 
+                <div class="col-xxl-4 col-xl-12">
+                    <div class="container">
+                        <h1>Daily Sales Chart</h1>
+                        <div id="salesChart"></div>
+                      </div>
+                    
+                      <script>
+                        chatDisplay();
+                    
+                        async function chatDisplay(){
+                          const data = await fetch("/salesChat",{
+                            method:'GET',
+                            headers:{
+                              'Authorization':`Bearer ${localStorage.getItem('token')}`
+                            }
+                          });
+                          const salesDataJSON = await data.json();
+
+                          const salesData = salesDataJSON.data;
+
+                          console.log(salesData);
+
+                          const dates = salesData.map(data => data._id);
+                          const sales = salesData.map(data => data.sales);
+                      
+                          // Create a trace for the chart
+                          const trace = {
+                            x: dates,
+                            y: sales,
+                            type: 'bar',
+                          };
+                      
+                          // Define layout options
+                          const layout = {
+                            title: 'Daily Sales',
+                            xaxis: {
+                              title: 'Date',
+                            },
+                            yaxis: {
+                              title: 'Sales (INR)',
+                            },
+                          };
+                      
+                          // Plot the chart
+                          Plotly.newPlot('salesChart', [trace], layout, {responsive: true});
+                        }
+                    
+                      </script>
+                </div>
             </div>
         </div>  
       

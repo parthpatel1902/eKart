@@ -141,7 +141,7 @@ const addproduct = async(req,res)=>{
 
 const getproduct = async(req,res)=>{
     try {
-        const resgetProduct = await product.find({isDelete:false},{__v:0,isDelete:0,createdAt:0});
+        const resgetProduct = await product.find({isDelete:false},{__v:0,isDelete:0});
         return successRes(res,200,"Product List : ",resgetProduct);
     } catch (error) {
         console.log("Error to find data from the getproduct");
@@ -680,7 +680,6 @@ const totalSelling = async(req,res)=>{
             {
               $match: {
                 isDelete: false,
-                order_status: "Delivered"
               }
             },
             {

@@ -713,9 +713,44 @@ const stopCorn = async (req, res) => {
     }
 }
 
+const chatData = async(req,res)=>{
+    try {
+        const resData = await order.aggregate([
+            {
+                $match: {
+                    isDelete: false
+                }
+            },
+            {
+                $group: {
+                    _id: {
+                        $dateToString: {
+                            format: "%Y-%m-%d",
+                            date: "$order_date"
+                        }
+                    },
+                    sales: {
+                        $sum: "$amount"
+                    }
+                }
+            },
+            {
+                $sort: {
+                    _id: 1
+                }
+            }
+        ])
+
+        return res.json({success:true,data:resData})
+    } catch (error) {
+        console.log("Error from find the chatData : ",error);
+        return errorRes(res,500,"some internal error");
+    }
+}
+
 
 module.exports = {
     addadmin,upload,adminlogin,adminlogout,checkavlemail,sendEmail,updatePassword,getdetails,addUser
     ,getUserDetails,deleteUser,checkAvl,updateUser,changePassword,sentNotification,getAllOrders,
-    editAllOrdersStatus,sentNotificationIOS,startCorn,stopCorn
+    editAllOrdersStatus,sentNotificationIOS,startCorn,stopCorn,chatData
 }

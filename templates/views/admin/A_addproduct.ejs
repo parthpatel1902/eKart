@@ -83,6 +83,7 @@
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body">
+          <center><img src="https://static-00.iconduck.com/assets.00/select-icon-512x512-eynh2v43.png" alt="" id="productpictureWhenAdd" class="border shadow-sm" height="70px" width="100px"/></center><hr/>
           <div class="mb-3">
             <label for="productName" class="form-label">Product Name</label>
             <input type="text" class="form-control" id="productName" onkeydown="validateProductName()" onkeypress="validateProductName()" onchange="validateProductName()" onblur="validateProductName()" name="productName" required>
@@ -113,6 +114,20 @@
             <label for="product_picture" class="form-label">Product Picture</label>
             <input type="file" class="form-control" id="product_picture" name="product_picture">
           </div>
+          <script>
+            document.getElementById('product_picture').addEventListener('change', function(event) {
+              const file = event.target.files[0];
+              if (file) {
+                  const reader = new FileReader();
+                  reader.onload = function(e) {
+                      const img = document.getElementById('productpictureWhenAdd');
+                      img.src = e.target.result;
+                      img.style.display = 'block';
+                  }
+                  reader.readAsDataURL(file);
+              }
+            });
+          </script>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
@@ -267,6 +282,20 @@
             <label for="product_picture" class="form-label">Product Picture</label>
             <input type="file" class="form-control" id="product_picture1" name="product_picture1">
           </div>
+          <script>
+            document.getElementById('product_picture1').addEventListener('change', function(event) {
+              const file = event.target.files[0];
+              if (file) {
+                  const reader = new FileReader();
+                  reader.onload = function(e) {
+                      const img = document.getElementById('productpicture1');
+                      img.src = e.target.result;
+                      img.style.display = 'block';
+                  }
+                  reader.readAsDataURL(file);
+              }
+            });
+          </script>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>

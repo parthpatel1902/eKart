@@ -13,6 +13,11 @@
         </div>
         <div class="modal-body">
           <div class="mb-3">
+            <center>
+                <img src="https://upload.wikimedia.org/wikipedia/commons/9/99/Sample_User_Icon.png" alt="" id="profilephotoWhenAdd" height="100px" width="100px" style="border-radius: 50%;">
+            </center>
+          </div>
+          <div class="mb-3">
             <label for="name" class="form-label">Name</label>
             <input
               type="text"
@@ -109,6 +114,20 @@
       </div>
     </div>
 </div>
+<script>
+    document.getElementById('userprofile').addEventListener('change', function(event) {
+    const file = event.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const img = document.getElementById('profilephotoWhenAdd');
+            img.src = e.target.result;
+            img.style.display = 'block';
+        }
+        reader.readAsDataURL(file);
+    }
+});
+</script>
 
 <div class="modal fade" id="updateusermodel" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
   <div class="modal-dialog">
@@ -226,6 +245,20 @@
     </div>
   </div>
 </div>
+<script>
+  document.getElementById('userprofile1').addEventListener('change', function(event) {
+  const file = event.target.files[0];
+  if (file) {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+          const img = document.getElementById('profilephoto');
+          img.src = e.target.result;
+          img.style.display = 'block';
+      }
+      reader.readAsDataURL(file);
+  }
+});
+</script>
 
   <main id="main" class="main">
     <section class="section dashboard">
@@ -263,60 +296,64 @@
       location.reload();
     }
   
-    $(document).ready(async()=>{
-      const token = localStorage.getItem("token");  
-      let adduser = `<table class='table-responsive' id='userTable'><thead><th>No</th><th>Name</th><th>Email</th><th>Mobile</th><th>gender</th><th>address</th><th>Picture</th><th>Update</th><th>Delete</th></thead><tbody>`
+    dataTableView();
 
-      try {
-          const response = await fetch('/displayusers', {
-              method: 'GET',
-              headers: {
-                  'Content-Type': 'application/json',
-                  'Authorization': `Bearer ${token}`
-              },
-          });
+    function dataTableView(){
+        $(document).ready(async()=>{
+        const token = localStorage.getItem("token");  
+        let adduser = `<table class='table-responsive' id='userTable'><thead><th>No</th><th>Name</th><th>Email</th><th>Mobile</th><th>gender</th><th>address</th><th>Picture</th><th>Update</th><th>Delete</th></thead><tbody>`
 
-          if (!response.ok) {
-              throw new Error('Network response was not ok');
-          }
-          const data = await response.json();
+        try {
+            const response = await fetch('/displayusers', {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+            });
 
-          let number = 1;
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            const data = await response.json();
 
-          data.map((item)=>{
+            let number = 1;
 
-              const update_data = {
-                  id: item._id,
-                  name:item.name,
-                  email: item.email,
-                  mobile:item.mobile,
-                  gender:item.gender,
-                  address:item.address,
-                  password:item.password,
-                  userProfile:item.userProfile
-              };
+            data.map((item)=>{
 
-              adduser += `<tr id='tr-${item._id}'><td class='text-center'>${number++}</td><td>${item.name}</td><td>${item.email}</td><td>${item.mobile}</td><td>${item.gender}</td><td>${item.address}</td><td><img src="${item.userProfile}" height="60px" width="80px"></td>
-                <td class='text-center'>
-                <button class='btn btn-dark'><i class="bi bi-pencil-square" onclick='updateRecord(${JSON.stringify(update_data)})' data-bs-toggle="modal" data-bs-target="#updateusermodel"></i></button>
-                </td>
-                <td class='text-center'>
-                <button class='btn btn-dark' onclick="deleteUser('${item._id}')"><i class="bi bi-trash3-fill"></i></button>
-                </td></tr>`
-          })
+                const update_data = {
+                    id: item._id,
+                    name:item.name,
+                    email: item.email,
+                    mobile:item.mobile,
+                    gender:item.gender,
+                    address:item.address,
+                    password:item.password,
+                    userProfile:item.userProfile
+                };
 
-      } catch(error){
-          console.log("Error from the find the admin profile picture : ",error);
-      }
+                adduser += `<tr id='tr-${item._id}'><td class='text-center'>${number++}</td><td>${item.name}</td><td>${item.email}</td><td>${item.mobile}</td><td>${item.gender}</td><td>${item.address}</td><td><img src="${item.userProfile}" height="60px" width="80px"></td>
+                  <td class='text-center'>
+                  <button class='btn btn-dark'><i class="bi bi-pencil-square" onclick='updateRecord(${JSON.stringify(update_data)})' data-bs-toggle="modal" data-bs-target="#updateusermodel"></i></button>
+                  </td>
+                  <td class='text-center'>
+                  <button class='btn btn-dark' onclick="deleteUser('${item._id}')"><i class="bi bi-trash3-fill"></i></button>
+                  </td></tr>`
+            })
 
-      adduser += `</tbody></table>`;
-      $("#root").html(adduser);
-      $('#userTable').DataTable({
-        columnDefs: [
-            { targets: [6,7,8], orderable: false }
-        ]
-      });
-    })
+        } catch(error){
+            console.log("Error from the find the admin profile picture : ",error);
+        }
+
+        adduser += `</tbody></table>`;
+        $("#root").html(adduser);
+        $('#userTable').DataTable({
+          columnDefs: [
+              { targets: [6,7,8], orderable: false }
+          ]
+        });
+      })
+    }
 
 
     function updateRecord(data){
@@ -362,6 +399,7 @@
               }).then(function (result) {
                   if (result.isConfirmed) {
                       $(`#tr-${id}`).remove();
+                      dataTableView();
                   }
               });
             }}
@@ -447,7 +485,7 @@
 
     // VALIDATION FOR ADD NEW USER
 
-  function validateName() {
+    function validateName() {
     const name = document.getElementById("name").value;
     const nameError = document.getElementById("nameError");
 

@@ -41,4 +41,6 @@ router.post("/order",auth.tokenCheck,multipartMiddleware,adminController.editAll
 router.post("/startcorn",multipartMiddleware,adminController.startCorn);
 router.get("/stopcorn",adminController.stopCorn);
 
+router.get("/salesChat",auth.tokenCheck,adminController.chatData);
+
 module.exports = router
