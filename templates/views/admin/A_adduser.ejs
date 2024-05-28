@@ -70,6 +70,7 @@
               name="gender"
               id="male"
               onchange="validateGender()"
+              checked
             />
             <label class="form-check-label" for="male">Male</label>
             <input
@@ -93,6 +94,7 @@
               placeholder="Enter the address"
               onchange="validateAddress()"
               onkeypress="validateAddress()"
+              onblur="validateAddress()"
             />
             <div id="addressError" class="text-danger"></div>
           </div>
@@ -169,7 +171,6 @@
             onkeyup="validateEmail1()"
             onblur="validateEmail1()"
             placeholder="Enter the email"
-            disabled
           />
           <div id="emailError1" class="text-danger"></div>
         </div>
@@ -237,7 +238,7 @@
         <div class="mb-3">
           <center>
             <button class="btn btn-dark" onclick="handleUpdate(event)">Update</button>
-            <button class="btn btn-danger" onclick="handleModelClode()">Close</button>
+            <button class="btn btn-danger" data-bs-dismiss="modal">Close</button>
           </center>
         </div>
       </form>
@@ -267,15 +268,31 @@
             <h3 class='text-center text-light p-1 rounded' style="background-color: #0e2238;">Add / edit / delete &nbsp;User</h3>
         </div>
         <div class="col-md-12">
-            <button class='btn text-light float-end' style="background-color:#0e2238;" data-bs-toggle="modal" data-bs-target="#addusermodel">+ Add new user</button> 
+            <button class='btn text-light float-end' style="background-color:#0e2238;" data-bs-toggle="modal" data-bs-target="#addusermodel" onclick="resetInfoModel()">+ Add new user</button> 
         </div>
         <div class="col-md-12 mt-2" id="root">
 
         </div>
       </div>
     </section>
-
   </main>
+  <script>
+      function resetInfoModel(){
+        document.getElementById('name').style.border = '';
+        document.getElementById('nameError').innerText = '';
+        document.getElementById('email').style.border = '';
+        document.getElementById('emailError').innerText = '';
+        document.getElementById('mobile').style.border = '';
+        document.getElementById('mobileError').innerText = '';
+        document.getElementById('address').style.border = '';
+        document.getElementById('addressError').innerText = '';
+
+        document.getElementById('name').value = '';
+        document.getElementById('email').value = '';
+        document.getElementById('mobile').value = '';
+        document.getElementById('address').value = '';
+      }
+  </script>
   <!-- End #main -->
 <div>
   <!-- Vendor JS Files -->
@@ -292,9 +309,6 @@
 </div>
 
 <script>
-    function handleModelClode(){
-      location.reload();
-    }
   
     dataTableView();
 
@@ -355,8 +369,19 @@
       })
     }
 
-
     function updateRecord(data){
+
+      console.log(data);
+
+      document.getElementById('name1').style.border = '';
+      document.getElementById('nameError1').innerText = '';
+      document.getElementById('email1').style.border = '';
+      document.getElementById('emailError1').innerText = '';
+      document.getElementById('mobile1').style.border = '';
+      document.getElementById('mobileError1').innerText = '';
+      document.getElementById('address1').style.border = '';
+      document.getElementById('addressError1').innerText = '';
+
       document.getElementById('userId').value = data.id
       document.getElementById('name1').value = data.name;
       document.getElementById('email1').value = data.email;
@@ -410,7 +435,180 @@
 
     }
 
+    // VALIDATION FOR ADD NEW USER
+
+    function validateName() {
+      const name = document.getElementById("name").value;
+      const nameError = document.getElementById("nameError");
+
+      if (name.trim() === "") {
+          nameError.textContent = "Name is Required.";
+          document.getElementById('name').style.border = "2px solid red";
+          return false;
+      } else if (name.trim().length < 3 || !/^[a-zA-Z\s]+$/.test(name.trim())) {
+          nameError.textContent = "Name must be at least 3 characters long and contain only letters.";
+          document.getElementById("name").style.border = "2px solid red";
+          return false;
+      } else {
+          nameError.textContent = "";
+          document.getElementById("name").style.border = "";
+          return true;
+      }
+    }
+
+    async function validateEmail() {
+      const emailInput = document.getElementById("email");
+      const emailError = document.getElementById("emailError");
+      const email = emailInput.value.trim();
+
+      if (email === "") {
+          emailError.textContent = "Email is required.";
+          emailInput.style.border = "2px solid red";
+          return false;
+      } else if (!/\S+@\S+\.\S+/.test(email)) {
+          emailError.textContent = "Invalid email format.";
+          emailInput.style.border = "2px solid red";
+          return false;
+      } else {
+          emailError.textContent = "";
+          emailInput.style.border = "";
+          try {
+              const response = await fetch(`/checkavl?email=${encodeURIComponent(email)}`);
+              const data = await response.json();
+              const flag = !data.available;
+              if (!flag) {
+                  emailError.textContent = "This email address is already in use.";
+                  emailInput.style.border = "2px solid red";
+              } else {
+                  emailError.textContent = "";
+                  emailInput.style.border = "";
+              }
+              return flag;
+          } catch (error) {
+              console.error('Error checking email availability:', error);
+              return false;
+          }
+      }
+    }
+
+    async function validateMobile() {
+      const mobile = document.getElementById("mobile").value;
+      const mobileError = document.getElementById("mobileError");
+
+      if (mobile == "") {
+          mobileError.textContent = "Mobile is required";
+          document.getElementById('mobile').style.border = "2px solid red";
+          return false;
+      } else if (!/^\d{10}$/.test(mobile)) {
+          mobileError.textContent = "Mobile must be 10 digits long";
+          document.getElementById('mobile').style.border = "2px solid red";
+          return false;
+      } else {
+          mobileError.textContent = "";
+          document.getElementById('mobile').style.border = "";
+          try {
+              const response = await fetch(`/checkavl?mobile=${encodeURIComponent(mobile)}`);
+              const data = await response.json();
+              if (data.available) {
+                  mobileError.textContent = "This mobile is already in use.";
+                  document.getElementById('mobile').style.border = "2px solid red";
+                  return false;
+              } else {
+                  mobileError.textContent = "";
+                  document.getElementById('mobile').style.border = "";
+                  return true;
+              }
+          } catch (error) {
+              console.error('Error checking mobile availability:', error);
+              return false;
+          }
+      }
+    }
+
+    function validateGender() {
+        const male = document.getElementById("male");
+        const female = document.getElementById("female");
+        const genderError = document.getElementById("genderError");
+
+        if (!male.checked && !female.checked) {
+          genderError.textContent = "Please select gender.";
+          document.getElementById('male').style.border = "2px solid red";
+          document.getElementById('female').style.border = "2px solid red";
+        } else {
+          genderError.textContent = "";
+          document.getElementById('male').style.border = "";
+          document.getElementById('female').style.border = "";
+        }
+      }
+
+    function validateAddress() {
+        const address = document.getElementById("address").value;
+        const addressError = document.getElementById("addressError");
+
+        if (address.trim() === "") {
+          addressError.textContent = "Address is required.";
+          document.getElementById('address').style.border = "2px solid red";
+          return false;
+        } else if (/^\d+$/.test(address)) {
+          addressError.textContent = "Address cannot contain only numbers.";
+          document.getElementById('address').style.border = "2px solid red";
+          return false;
+        }
+         else {
+          addressError.textContent = "";
+          document.getElementById('address').style.border = "";
+          return true;
+        }
+    }
+   
+    function restrictInput(event) {
+      const keyPressed = event.key;
+
+        // Check if the key pressed is a digit (0-9) or the backspace key
+      if (
+        !/^\d$/.test(keyPressed) &&
+        keyPressed !== "Backspace" &&
+        keyPressed !== "ArrowLeft" &&
+        keyPressed !== "ArrowRight"
+      ) {
+        event.preventDefault(); // Prevent non-numeric characters from being entered
+      }
+    }
+
+    function restrictInputName(event) {
+      const keyPressed = event.key;
+        if (!/^[a-zA-Z\s]+$/.test(keyPressed) && keyPressed !== "ArrowLeft" && keyPressed !== "ArrowRight") {
+          event.preventDefault();
+        }
+    }
+
+    async function CheckAllValidation() {
+      if (!(await validateName())) {
+          return false;
+      } else if (!(await validateEmail())) {
+          return false;
+      } else if (!(await validateMobile())) {
+          return false;
+      } else if (!(await validateAddress())) {
+          return false;
+      } else {
+          console.log("success");
+          return true;
+      }
+    }
+
     async function adduser(event){
+
+      const resCheckAllvalid = await CheckAllValidation(); 
+
+      if(!resCheckAllvalid){
+        return Swal.fire({
+          title: "Oops...!",
+          text: "filled the details correctly!",
+          icon: "error"
+        });
+      }
+
       event.preventDefault();
       const name = document.getElementById("name").value;
       const email = document.getElementById("email").value;
@@ -484,258 +682,152 @@
     }
 
     // VALIDATION FOR ADD NEW USER
-
-    function validateName() {
-    const name = document.getElementById("name").value;
-    const nameError = document.getElementById("nameError");
-
-    if (name.trim() === "") {
-        nameError.textContent = "Name is Required.";
-        document.getElementById('name').style.border = "2px solid red";
-    } else if (name.trim().length < 3 || !/^[a-zA-Z\s]+$/.test(name.trim())) {
-        nameError.textContent = "Name must be at least 3 characters long and contain only letters.";
-        document.getElementById("name").style.border = "2px solid red";
-    } else {
-        nameError.textContent = "";
-        document.getElementById("name").style.border = "";
-    }
-  }
-
-    function validateEmail() {
-        const emailInput = document.getElementById("email");
-        const emailError = document.getElementById("emailError");
-        const email = emailInput.value.trim();
-
-        if (email === "") {
-            emailError.textContent = "Email is required.";
-            document.getElementById('email').style.border = "2px solid red";
-        } else if (!/\S+@\S+\.\S+/.test(email)) {
-            emailError.textContent = "Invalid email format.";
-            document.getElementById('email').style.border = "2px solid red";
-        } else {
-            emailError.textContent = "";
-            document.getElementById('email').style.border = "";
-            try {
-               fetch(`/checkavl?email=${encodeURIComponent(email)}`).then((response) => {
-                   response.json().then((data) => {
-                       if (data.available) {
-                          emailError.textContent = "This email address is already in use.";
-                          emailInput.style.border = "2px solid red";
-                       } else {
-                          emailError.textContent = ""
-                          emailInput.style.border = "";
-                       }
-                   })
-                }).catch((err) => console.log(err));
-            } catch (error) {
-                console.error('Error checking email availability:', error);
-            }
-        }
-      }
-
-    function validateMobile() {
-        const mobile = document.getElementById("mobile").value;
-        const mobileError = document.getElementById("mobileError");
-
-        if (mobile == "") {
-          mobileError.textContent = "Mobile is required";
-          document.getElementById('mobile').style.border = "2px solid red";
-        } else if (!/^\d{10}$/.test(mobile)) {
-          mobileError.textContent = "Mobile must be 10 digits long";
-          document.getElementById('mobile').style.border = "2px solid red";
-        } else {
-              mobileError.textContent = ""
-              document.getElementById('mobile').style.border = "";
-          try {
-               fetch(`/checkavl?mobile=${encodeURIComponent(mobile)}`).then((response) => {
-                   response.json().then((data) => {
-                       if (data.available) {
-                          mobileError.textContent = "This mobile is already in use.";
-                          document.getElementById('mobile').style.border = "2px solid red";
-                       } else {
-                          mobileError.textContent = ""
-                          document.getElementById('mobile').style.border = "";
-                       }
-                   })
-                }).catch((err) => console.log(err));
-            } catch (error) {
-                console.error('Error checking email availability:', error);
-            }
-        }
-      }
-
-    function validateGender() {
-        const male = document.getElementById("male");
-        const female = document.getElementById("female");
-        const genderError = document.getElementById("genderError");
-
-        if (!male.checked && !female.checked) {
-          genderError.textContent = "Please select gender.";
-          document.getElementById('male').style.border = "2px solid red";
-          document.getElementById('female').style.border = "2px solid red";
-        } else {
-          genderError.textContent = "";
-          document.getElementById('male').style.border = "";
-          document.getElementById('female').style.border = "";
-        }
-      }
-
-    function validateAddress() {
-        const address = document.getElementById("address").value;
-        const addressError = document.getElementById("addressError");
-
-        if (address.trim() === "") {
-          addressError.textContent = "Address is required.";
-          document.getElementById('address').style.border = "2px solid red";
-        } else if (/^\d+$/.test(address)) {
-          addressError.textContent = "Address cannot contain only numbers.";
-          document.getElementById('address').style.border = "2px solid red";
-        }
-         else {
-          addressError.textContent = "";
-          document.getElementById('address').style.border = "";
-        }
-    }
-   
-    function restrictInput(event) {
-      const keyPressed = event.key;
-
-        // Check if the key pressed is a digit (0-9) or the backspace key
-      if (
-        !/^\d$/.test(keyPressed) &&
-        keyPressed !== "Backspace" &&
-        keyPressed !== "ArrowLeft" &&
-        keyPressed !== "ArrowRight"
-      ) {
-        event.preventDefault(); // Prevent non-numeric characters from being entered
-      }
-    }
-
-    function restrictInputName(event) {
-      const keyPressed = event.key;
-        if (!/^[a-zA-Z\s]+$/.test(keyPressed) && keyPressed !== "ArrowLeft" && keyPressed !== "ArrowRight") {
-          event.preventDefault();
-        }
-    }
-
-    // VALIDATION FOR ADD NEW USER
     
     function validateName1() {
         const name = document.getElementById("name1").value;
         const nameError = document.getElementById("nameError1");
 
-        if (name === "") {
-          nameError.innerHTML = "Name is Required.";
-          document.getElementById('name1').style.border = "2px solid red";
-        } else if (name.length < 3 || !/^[a-zA-Z]+$/.test(name)) {
-          nameError.textContent =
-            "Name must be at least 3 characters long and contain only letters.";
-            document.getElementById("name1").style.border = "2px solid red";
-        } else {
+        if(name){
+          if (name.length < 3 || !/^[a-zA-Z]+$/.test(name)) {
+            nameError.textContent =
+              "Name must be at least 3 characters long and contain only letters.";
+              document.getElementById("name1").style.border = "2px solid red";
+            return false;
+          } else {
+            nameError.textContent = "";
+            document.getElementById("name1").style.border = "";
+            return true;
+          }
+        }else{
           nameError.textContent = "";
           document.getElementById("name1").style.border = "";
+          return true;
         }
+
     }
 
-    function validateEmail1() {
+    async function validateEmail1() {
         const emailInput = document.getElementById("email1");
         const emailError = document.getElementById("emailError1");
         const email = emailInput.value.trim();
 
-        if (email === "") {
-            emailError.textContent = "Email is required.";
-            document.getElementById('email1').style.border = "2px solid red";
-        } else if (!/\S+@\S+\.\S+/.test(email)) {
+        if(emailInput.value){
+          if (!/\S+@\S+\.\S+/.test(email)) {
             emailError.textContent = "Invalid email format.";
             document.getElementById('email1').style.border = "2px solid red";
-        } else {
-            const id = document.getElementById('userId').value;
-            try {
-               fetch(`/checkavl?email=${encodeURIComponent(email)}&id=${id}`).then((response) => {
-                   response.json().then((data) => {
-                       if (data.available) {
-                          emailError.textContent = "This email address is already in use.";
-                          emailInput.style.border = "2px solid red";
-                       } else {
-                          emailError.textContent = ""
-                          emailInput.style.border = "";
-                       }
-                   })
-                }).catch((err) => console.log(err));
+            return false;
+          } else {
+              const id = document.getElementById('userId').value;
+              try {
+                const response = await fetch(`/checkavl?email=${encodeURIComponent(email)}&id=${id}`);
+                const data = await response.json();
+                const flag = !data.available;
+                if (!flag) {
+                    emailError.textContent = "This email address is already in use.";
+                    emailInput.style.border = "2px solid red";
+                } else {
+                    emailError.textContent = "";
+                    emailInput.style.border = "";
+                }
+                return flag;
             } catch (error) {
                 console.error('Error checking email availability:', error);
+                return false;
             }
+          }
+        }else{
+          emailError.textContent = "";
+          emailInput.style.border = "";
+          return true;
         }
       }
 
-    function validateMobile1() {
+    async function validateMobile1() {
         const mobile = document.getElementById("mobile1").value;
         const mobileError = document.getElementById("mobileError1");
 
-        if (mobile == "") {
-          mobileError.textContent = "Mobile is required";
-          document.getElementById('mobile1').style.border = "2px solid red";
-        } else if (!/^\d{10}$/.test(mobile)) {
-          mobileError.textContent = "Mobile must be 10 digits long";
-          document.getElementById('mobile1').style.border = "2px solid red";
-        } else {
-              const id = document.getElementById('userId').value;
-          try {
-               fetch(`/checkavl?mobile=${encodeURIComponent(mobile)}&id=${id}`).then((response) => {
-                   response.json().then((data) => {
-                       if (data.available) {
-                          mobileError.textContent = "This mobile is already in use.";
-                          document.getElementById('mobile1').style.border = "2px solid red";
-                       } else {
-                          mobileError.textContent = ""
-                          document.getElementById('mobile1').style.border = "";
-                       }
-                   })
-                }).catch((err) => console.log(err));
+        if(mobile){
+          if (!/^\d{10}$/.test(mobile)) {
+            mobileError.textContent = "Mobile must be 10 digits long";
+            document.getElementById('mobile1').style.border = "2px solid red";
+            return false;
+          } else {
+                const id = document.getElementById('userId').value;
+              try {
+                const response = await fetch(`/checkavl?mobile=${encodeURIComponent(mobile)}&id=${id}`);
+                const data = await response.json();
+                if (data.available) {
+                    mobileError.textContent = "This mobile is already in use.";
+                    document.getElementById('mobile1').style.border = "2px solid red";
+                    return false;
+                } else {
+                    mobileError.textContent = "";
+                    document.getElementById('mobile1').style.border = "";
+                    return true;
+                }
             } catch (error) {
-                console.error('Error checking email availability:', error);
+                console.error('Error checking mobile availability:', error);
+                return false;
             }
+          }
+        }else{
+          mobileError.textContent = "";
+          document.getElementById('mobile1').style.border = "";
+          return true;
         }
+
       }
 
     function validateAddress1() {
       const address = document.getElementById("address1").value;
       const addressError = document.getElementById("addressError1");
 
-      if (address.trim() === "") {
-        addressError.textContent = "Address is required.";
-        document.getElementById('address1').style.border = "2px solid red";
-      } else if (/^\d+$/.test(address)) {
-        addressError.textContent = "Address cannot contain only numbers.";
-        document.getElementById('address1').style.border = "2px solid red";
-      }
-      else {
+      if(address){
+        if (/^\d+$/.test(address)) {
+          addressError.textContent = "Address cannot contain only numbers.";
+          document.getElementById('address1').style.border = "2px solid red";
+          return false;
+        }
+        else {
+          addressError.textContent = "";
+          document.getElementById('address1').style.border = "";
+          return true;
+        }
+      }else{
         addressError.textContent = "";
         document.getElementById('address1').style.border = "";
+        return true;
+      }
+
+    }
+
+    async function CheckAllValidation1() {
+      if (!(await validateName1())) {
+          return false;
+      } else if (!(await validateEmail1())) {
+          return false;
+      } else if (!(await validateMobile1())) {
+          return false;
+      } else if (!(await validateAddress1())) {
+          return false;
+      } else {
+          console.log("success");
+          return true;
       }
     }
 
-    function validatePassword() {
-        const password = document.getElementById("password").value;
-        const passwordError = document.getElementById("passwordError");
-
-        if (password == "") {
-          passwordError.textContent = "Password is required";
-          document.getElementById('password').style.border = "2px solid red";
-        } else if (!/^(?=.*\d)(?=.*[a-zA-Z]).{8,}$/.test(password)) {
-          passwordError.textContent =
-            "Password must be at least 8 characters long and contain a mix of letters and digits.";
-          document.getElementById('password').style.border = "2px solid red";
-        } else {
-          passwordError.textContent = "";
-          document.getElementById('password').style.border = "";
-        }
-      }
-
-    // update data 
-
     async function handleUpdate(event){
       event.preventDefault();
+
+      const resCheckAllvalid = await CheckAllValidation1(); 
+
+      if(!resCheckAllvalid){
+        return Swal.fire({
+          title: "Oops...!",
+          text: "filled the details correctly!",
+          icon: "error"
+        });
+      }
 
       const id = document.getElementById('userId').value;
       const name = document.getElementById('name1').value;
@@ -751,27 +843,47 @@
         gender = "female";
       }
 
-      if(name == "" || email == "" || mobile == "" || address == "" || !gender ){
-        return Swal.fire({
-          icon: 'error',
-          title: 'Oops...',
-          text: 'Please fill all fields!',
-        })
-      }
+      // if(name == "" || email == "" || mobile == "" || address == "" || !gender ){
+      //   return Swal.fire({
+      //     icon: 'error',
+      //     title: 'Oops...',
+      //     text: 'Please fill all fields!',
+      //   })
+      // }
 
       const apiData = new FormData();
-      if(file===undefined){
+
+      // if(file===undefined){
+      //   apiData.append('name',name);
+      //   apiData.append('email', email);
+      //   apiData.append('mobile', mobile);
+      //   apiData.append('gender', gender);
+      //   apiData.append('address', address);
+      // }else{
+      //   apiData.append('name',name);
+      //   apiData.append('email', email);
+      //   apiData.append('mobile', mobile);
+      //   apiData.append('gender', gender);
+      //   apiData.append('address', address);
+      //   apiData.append('userProfile',file);
+      // }
+
+      if(name){
         apiData.append('name',name);
+      }
+      if(email){
         apiData.append('email', email);
+      }
+      if(mobile){
         apiData.append('mobile', mobile);
+      }
+      if(gender){
         apiData.append('gender', gender);
-        apiData.append('address', address);
-      }else{
-        apiData.append('name',name);
-        apiData.append('email', email);
-        apiData.append('mobile', mobile);
-        apiData.append('gender', gender);
-        apiData.append('address', address);
+      }
+      if(address){
+        apiData.append('address',address);
+      }
+      if(file){
         apiData.append('userProfile',file);
       }
 

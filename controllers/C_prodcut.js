@@ -477,6 +477,7 @@ const stripePayment = async(req, res) => {
             });
         })
         .then((charge) => {
+            console.log(charge);
             const insert_data = {
                 order_personId: req.user.id,
                 order_personName: order_personName.name,

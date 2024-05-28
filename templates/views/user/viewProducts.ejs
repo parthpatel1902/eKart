@@ -34,6 +34,9 @@
           box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.2);
           margin-top: 50px;
         }
+        ::-webkit-scrollbar {
+          display: none; /* Hide the scrollbar */
+        }
     </style>
 </head>
 <body style="margin-top: 100px;">
@@ -68,7 +71,7 @@
       </div>
     </div>
   </div>
-  <div id="productCards" class="row"></div>
+  <div id="productCards" class="row" style="min-height: 1000px;"></div>
   <nav aria-label="Page navigation">
     <ul id="pagination" class="pagination"></ul>
   </nav>
@@ -133,6 +136,11 @@
       pid: item.productId._id,
       cartId: item._id
     }));
+
+    if(products.length == 0){
+      productCards.innerHTML = `<p class="alert alert-primary text-center" role="alert" style='height:55px'>No products found!</p>`;
+      return;
+    }
 
     products.forEach(product => {
       const isInCart = ProductsID.find(item => item.pid === product._id);

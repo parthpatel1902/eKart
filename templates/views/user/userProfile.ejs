@@ -155,6 +155,20 @@
                   name="userprofile1"
                 />
                 <div id="profilePictureError1" class="text-danger"></div>
+                <script>
+                  document.getElementById('userprofile1').addEventListener('change', function(event) {
+                    const file = event.target.files[0];
+                    if (file) {
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            const img = document.getElementById('profilephoto');
+                            img.src = e.target.result;
+                            img.style.display = 'block';
+                        }
+                        reader.readAsDataURL(file);
+                    }
+                  });
+                </script>
               </div>
               <div class="mb-3">
                 <center>
